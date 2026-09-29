@@ -1,27 +1,49 @@
-import 'package:rickipedia/core/models/character.dart';
+import 'location_model.dart';
+import 'origin_model.dart';
 
-class CharacterModel extends Character {
-  const CharacterModel({
-    required super.id,
-    required super.name,
-    required super.status,
-    required super.gender,
-    required super.origin,
-    required super.episodesAppearedOn,
-    required super.imageUrl,
+class Character {
+  final int id;
+  String name;
+  String status;
+  String species;
+  String type;
+  String gender;
+  Origin origin;
+  Location location;
+  String image;
+  List<String> episode;
+  String url;
+  String created;
+
+  Character({
+    required this.id,
+    required this.name,
+    required this.status,
+    required this.species,
+    required this.type,
+    required this.gender,
+    required this.origin,
+    required this.location,
+    required this.image,
+    required this.episode,
+    required this.url,
+    required this.created,
   });
 
-  factory CharacterModel.fromJson(Map<String, dynamic> json) {
-    final originData = json['origin'] as Map<String, dynamic>;
-    final episodeData = json['episode'] as List<dynamic>;
-    return CharacterModel(
-      id: json['id'] as int,
-      name: json['name'] as String,
-      status: json['status'] as String,
-      gender: json['gender'] as String,
-      origin: originData['name'] as String,
-      episodesAppearedOn: episodeData.length,
-      imageUrl: json['image'] as String,
+  factory Character.fromJson(Map<String, dynamic> json) {
+    return Character(
+      id: json['id'],
+      name: json['name'],
+      status: json['status'],
+      species: json['species'],
+      type: json['type'],
+      gender: json['gender'],
+      origin: Origin.fromJson(json['origin'] as Map<String, dynamic>),
+      location: Location.fromJson(json['location'] as Map<String, dynamic>),
+      image: json['image'],
+      episode: json['episode'].cast<String>(),
+      url: json['url'],
+      created: json['created'],
     );
   }
 }

@@ -5,14 +5,14 @@ class CharacterResponse {
   final int pages;
   final String? next;
   final String? prev;
-  final List<Character> character;
+  final List<Character> characters;
 
   CharacterResponse({
     required this.count,
     required this.pages,
     required this.next,
     required this.prev,
-    required this.character,
+    required this.characters,
   });
 
   factory CharacterResponse.fromJson(Map<String, dynamic> json) {
@@ -23,7 +23,7 @@ class CharacterResponse {
       pages: info['pages'] as int,
       next: info['next'] as String?,
       prev: info['prev'] as String?,
-      character: result.map((item) {
+      characters: result.map((item) {
         return Character.fromJson(item as Map<String, dynamic>);
       }).toList(),
     );

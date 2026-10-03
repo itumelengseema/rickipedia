@@ -3,12 +3,14 @@ import 'dart:convert';
 import 'package:rickipedia/core/network/http_client.dart';
 
 import '../models/character_response_model.dart';
+import 'character_data_source.dart';
 
-class CharacterApiDataSource {
+class CharacterApiDataSource implements CharacterDataSource {
   final HttpClient client;
 
   CharacterApiDataSource({required this.client});
 
+  @override
   Future<CharacterResponse> fetchCharacters({
     int page = 1,
     String? name,
@@ -21,8 +23,9 @@ class CharacterApiDataSource {
     });
 
     final response = await client.get(uri.toString());
+
     if (response.statusCode != 200) {
-      throw Exception('Fail to load Characters: HTTP ${response.statusCode}');
+      throw Exception('Failed to load characters: HTTP ${response.statusCode}');
     }
 
     final decoded = jsonDecode(response.body) as Map<String, dynamic>;

@@ -1,5 +1,6 @@
 abstract interface class HttpClient {
   Future<HttpResponse> get(String url);
+  void close();
 }
 
 class HttpResponse {

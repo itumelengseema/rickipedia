@@ -6,6 +6,7 @@ import 'package:rickipedia/features/character/data/character_api_data_source.dar
 
 class FakeHttpClient implements HttpClient {
   final HttpResponse response;
+  String? lasturl;
 
   FakeHttpClient({required this.response});
 
@@ -14,6 +15,7 @@ class FakeHttpClient implements HttpClient {
 
   @override
   Future<HttpResponse> get(String url) async {
+    lasturl = url;
     return response;
   }
 }
@@ -63,5 +65,6 @@ void main() {
     expect(result.pages, 42);
     expect(result.characters, hasLength(1));
     expect(result.characters.first.name, 'Aqua Morty');
+    expect(fakeClient.lasturl, contains('page=2'));
   });
 }

@@ -6,7 +6,7 @@ import 'package:rickipedia/features/character/data/character_api_data_source.dar
 
 class FakeHttpClient implements HttpClient {
   final HttpResponse response;
-  String? lasturl;
+  String? lastUrl;
 
   FakeHttpClient({required this.response});
 
@@ -15,44 +15,44 @@ class FakeHttpClient implements HttpClient {
 
   @override
   Future<HttpResponse> get(String url) async {
-    lasturl = url;
+    lastUrl = url;
     return response;
   }
 }
 
 void main() {
-  test('returns CharacterResponse when request is successful', () async {
-    final json = <String, dynamic>{
-      "info": {
-        "count": 826,
-        "pages": 42,
-        "next": "https://rickandmortyapi.com/api/character/?page=3",
-        "prev": "https://rickandmortyapi.com/api/character/?page=1",
-      },
-      "results": [
-        {
-          "id": 21,
-          "name": "Aqua Morty",
-          "status": "unknown",
-          "species": "Humanoid",
-          "type": "Fish-Person",
-          "gender": "Male",
-          "origin": {"name": "unknown", "url": ""},
-          "location": {
-            "name": "Citadel of Ricks",
-            "url": "https://rickandmortyapi.com/api/location/3",
-          },
-          "image": "https://rickandmortyapi.com/api/character/avatar/21.jpeg",
-          "episode": [
-            "https://rickandmortyapi.com/api/episode/10",
-            "https://rickandmortyapi.com/api/episode/22",
-          ],
-          "url": "https://rickandmortyapi.com/api/character/21",
-          "created": "2017-11-04T22:39:48.055Z",
+  final json = <String, dynamic>{
+    "info": {
+      "count": 826,
+      "pages": 42,
+      "next": "https://rickandmortyapi.com/api/character/?page=3",
+      "prev": "https://rickandmortyapi.com/api/character/?page=1",
+    },
+    "results": [
+      {
+        "id": 21,
+        "name": "Aqua Morty",
+        "status": "unknown",
+        "species": "Humanoid",
+        "type": "Fish-Person",
+        "gender": "Male",
+        "origin": {"name": "unknown", "url": ""},
+        "location": {
+          "name": "Citadel of Ricks",
+          "url": "https://rickandmortyapi.com/api/location/3",
         },
-      ],
-    };
+        "image": "https://rickandmortyapi.com/api/character/avatar/21.jpeg",
+        "episode": [
+          "https://rickandmortyapi.com/api/episode/10",
+          "https://rickandmortyapi.com/api/episode/22",
+        ],
+        "url": "https://rickandmortyapi.com/api/character/21",
+        "created": "2017-11-04T22:39:48.055Z",
+      },
+    ],
+  };
 
+  test('returns CharacterResponse when request is successful', () async {
     final fakeClient = FakeHttpClient(
       response: HttpResponse(statusCode: 200, body: jsonEncode(json)),
     );
@@ -65,6 +65,87 @@ void main() {
     expect(result.pages, 42);
     expect(result.characters, hasLength(1));
     expect(result.characters.first.name, 'Aqua Morty');
-    expect(fakeClient.lasturl, contains('page=2'));
+
+    final uri = Uri.parse(fakeClient.lastUrl!);
+
+    expect(uri.queryParameters['page'], '2');
+  });
+
+  test('adds the character name to the request URL', () async {
+    final fakeClient = FakeHttpClient(
+      response: HttpResponse(statusCode: 200, body: jsonEncode(json)),
+    );
+
+    final dataSource = CharacterApiDataSource(client: fakeClient);
+
+    await dataSource.fetchCharacters(name: 'Rick');
+
+    final uri = Uri.parse(fakeClient.lastUrl!);
+
+    expect(uri.queryParameters['page'], '1');
+    expect(uri.queryParameters['name'], 'Rick');
+  });
+
+  test('trims the character name before adding it to the URL', () async {
+    final fakeClient = FakeHttpClient(
+      response: HttpResponse(statusCode: 200, body: jsonEncode(json)),
+    );
+
+    final dataSource = CharacterApiDataSource(client: fakeClient);
+
+    await dataSource.fetchCharacters(name: '  Rick  ');
+
+    final uri = Uri.parse(fakeClient.lastUrl!);
+
+    expect(uri.queryParameters['name'], 'Rick');
+  });
+
+  test('does not add name parameter when name is blank', () async {
+    final fakeClient = FakeHttpClient(
+      response: HttpResponse(statusCode: 200, body: jsonEncode(json)),
+    );
+
+    final dataSource = CharacterApiDataSource(client: fakeClient);
+
+    await dataSource.fetchCharacters(name: '   ');
+
+    final uri = Uri.parse(fakeClient.lastUrl!);
+
+    expect(uri.queryParameters['page'], '1');
+    expect(uri.queryParameters.containsKey('name'), false);
+  });
+
+  test('returns empty response when no characters match the name', () async {
+    final fakeClient = FakeHttpClient(
+      response: HttpResponse(
+        statusCode: 404,
+        body: jsonEncode({"error": "There is nothing here"}),
+      ),
+    );
+
+    final dataSource = CharacterApiDataSource(client: fakeClient);
+
+    final result = await dataSource.fetchCharacters(
+      name: 'DefinitelyNotACharacter',
+    );
+
+    expect(result.count, 0);
+    expect(result.pages, 0);
+    expect(result.characters, isEmpty);
+    expect(result.next, isNull);
+    expect(result.prev, isNull);
+  });
+
+  test('throws exception when response status is not 200', () async {
+    final fakeClient = FakeHttpClient(
+      response: HttpResponse(
+        statusCode: 500,
+        body: jsonEncode({"error": "Server error"}),
+      ),
+    );
+
+    final dataSource = CharacterApiDataSource(client: fakeClient);
+
+    expect(() => dataSource.fetchCharacters(), throwsA(isA<Exception>()));
   });
 }

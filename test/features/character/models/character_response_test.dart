@@ -22,7 +22,7 @@ void main() {
     expect(response.pages, 42);
     expect(response.next, 'https://rickandmortyapi.com/api/character?page=2');
     expect(response.prev, isNull);
-    expect(response.character, isEmpty);
+    expect(response.characters, isEmpty);
   });
 
   test('parses a character with nested data', () {
@@ -60,9 +60,9 @@ void main() {
     final response = CharacterResponse.fromJson(json);
 
     // Assert
-    expect(response.character, hasLength(1));
+    expect(response.characters, hasLength(1));
 
-    final character = response.character.single;
+    final character = response.characters.single;
 
     expect(character.id, 1);
     expect(character.name, 'Rick Sanchez');
@@ -131,10 +131,10 @@ void main() {
     final response = CharacterResponse.fromJson(json);
 
     // Assert
-    expect(response.character, hasLength(2));
+    expect(response.characters, hasLength(2));
 
-    final first = response.character[0];
-    final second = response.character[1];
+    final first = response.characters[0];
+    final second = response.characters[1];
 
     expect(first.id, 1);
     expect(first.name, 'Rick Sanchez');

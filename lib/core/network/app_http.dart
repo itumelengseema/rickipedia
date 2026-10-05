@@ -4,8 +4,11 @@ import 'http_client.dart';
 
 class AppHttp implements HttpClient {
   final http.Client client;
+  final bool _ownsClient;
 
-  AppHttp({http.Client? client}) : client = client ?? http.Client();
+  AppHttp({http.Client? client})
+    : client = client ?? http.Client(),
+      _ownsClient = client == null;
 
   @override
   Future<HttpResponse> get(String url) async {
@@ -14,5 +17,12 @@ class AppHttp implements HttpClient {
         .timeout(const Duration(seconds: 15));
 
     return HttpResponse(statusCode: response.statusCode, body: response.body);
+  }
+
+  @override
+  void close() {
+    if (_ownsClient) {
+      client.close();
+    }
   }
 }

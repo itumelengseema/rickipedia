@@ -148,4 +148,23 @@ void main() {
 
     expect(() => dataSource.fetchCharacters(), throwsA(isA<Exception>()));
   });
+
+  test(
+    'returns empty response when search has no results on later page',
+    () async {
+      final fakeClient = FakeHttpClient(
+        response: HttpResponse(
+          statusCode: 404,
+          body: jsonEncode({"error": "There is nothing here"}),
+        ),
+      );
+
+      final dataSource = CharacterApiDataSource(client: fakeClient);
+
+      final result = await dataSource.fetchCharacters(page: 2, name: 'Rick');
+
+      expect(result.characters, isEmpty);
+      expect(result.count, 0);
+    },
+  );
 }

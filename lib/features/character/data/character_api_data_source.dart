@@ -25,7 +25,6 @@ class CharacterApiDataSource implements CharacterDataSource {
     final response = await client.get(uri.toString());
 
     if (response.statusCode == 404 &&
-        page == 1 &&
         searchName != null &&
         searchName.isNotEmpty) {
       final errorBody = jsonDecode(response.body);

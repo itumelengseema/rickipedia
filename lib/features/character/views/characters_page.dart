@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rickipedia/shared/widgets/search_text_input.dart';
 import 'package:rickipedia/theme/app_spacing.dart';
 
+import '../../../shared/widgets/character_card.dart';
 import '../../../theme/app_colours.dart';
+import '../providers/character_controller.dart';
 
-class CharactersPage extends StatelessWidget {
+class CharactersPage extends ConsumerWidget {
   const CharactersPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final characterState = ref.watch(characterControllerProvider);
+
     return Scaffold(
       body: CustomScrollView(
         slivers: [
@@ -39,7 +44,6 @@ class CharactersPage extends StatelessWidget {
                             width: 70,
                             fit: BoxFit.contain,
                           ),
-
                           Row(
                             children: [
                               IconButton(
@@ -62,15 +66,70 @@ class CharactersPage extends StatelessWidget {
                           ),
                         ],
                       ),
-
                       const SizedBox(height: AppSpacing.sm),
-
-                      GestureDetector(onTap: () {}, child: SearchTextInput()),
+                      GestureDetector(
+                        onTap: () {},
+                        child: const SearchTextInput(),
+                      ),
                     ],
                   ),
                 ),
               ),
             ),
+          ),
+
+          characterState.when(
+            loading: () => const SliverFillRemaining(
+              hasScrollBody: false,
+              child: Center(child: CircularProgressIndicator()),
+            ),
+
+            error: (error, stackTrace) => SliverFillRemaining(
+              hasScrollBody: false,
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.error_outline, size: 48),
+                    const SizedBox(height: AppSpacing.sm),
+                    const Text('Failed to load characters'),
+                    const SizedBox(height: AppSpacing.sm),
+                    ElevatedButton(
+                      onPressed: () {
+                        ref.read(characterControllerProvider.notifier).retry();
+                      },
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            data: (response) {
+              if (response.characters.isEmpty) {
+                return const SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Center(child: Text('No characters found')),
+                );
+              }
+
+              return SliverPadding(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                sliver: SliverGrid(
+                  delegate: SliverChildBuilderDelegate((context, index) {
+                    final character = response.characters[index];
+
+                    return CharacterCard(character: character);
+                  }, childCount: response.characters.length),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: AppSpacing.md,
+                    mainAxisSpacing: AppSpacing.md,
+                    childAspectRatio: 0.72,
+                  ),
+                ),
+              );
+            },
           ),
         ],
       ),

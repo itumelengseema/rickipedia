@@ -151,7 +151,7 @@ void main() {
       await tester.pump();
 
       expect(repository.searchedNames, ['Rick']);
-      expect(find.text('Search to find characters'), findsOneWidget);
+      expect(find.text('Failed to search characters'), findsOneWidget);
       expect(find.byType(CircularProgressIndicator), findsNothing);
     });
 

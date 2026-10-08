@@ -18,8 +18,11 @@ class CharacterSearchController extends AsyncNotifier<CharacterResponse?> {
     return null;
   }
 
+  int _requestId = 0;
+
   void search(String value) {
     final query = value.trim();
+    final requestId = ++_requestId;
 
     _debounceTimer?.cancel();
 
@@ -27,12 +30,17 @@ class CharacterSearchController extends AsyncNotifier<CharacterResponse?> {
       state = const AsyncData(null);
       return;
     }
-    _debounceTimer = Timer(Duration(milliseconds: 500), () async {
+
+    _debounceTimer = Timer(const Duration(milliseconds: 500), () async {
       state = const AsyncLoading();
 
-      state = await AsyncValue.guard(() {
-        return _repository.fetchCharacters(name: query);
-      });
+      final result = await AsyncValue.guard(
+        () => _repository.fetchCharacters(name: query),
+      );
+
+      if (requestId == _requestId && ref.mounted) {
+        state = result;
+      }
     });
   }
 }

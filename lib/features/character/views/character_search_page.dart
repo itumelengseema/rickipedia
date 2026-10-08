@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:rickipedia/features/character/models/character_model.dart';
 import 'package:rickipedia/features/character/providers/character_search_controller.dart';
-import 'package:rickipedia/shared/widgets/SearchResultsList.dart';
+import 'package:rickipedia/shared/widgets/search_results_list.dart';
 import 'package:rickipedia/theme/app_colours.dart';
 import 'package:rickipedia/theme/app_spacing.dart';
 import 'package:rickipedia/theme/app_text_style.dart';
@@ -129,17 +129,17 @@ class _CharacterSearchPageState extends ConsumerState<CharacterSearchPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     SvgPicture.asset(
-                      'assets/images/searchImage.svg',
+                      'assets/images/server_failure.svg',
                       width: 150,
                       fit: BoxFit.contain,
                     ),
-                    Text("Search to find characters"),
+                    const SizedBox(height: AppSpacing.sm),
+                    Text("Failed to search characters"),
                   ],
                 ),
               );
             },
             data: (response) {
-              debugPrint('Results: ${response?.characters.length}');
               if (response == null) {
                 return SliverFillRemaining(
                   hasScrollBody: false,
@@ -151,6 +151,7 @@ class _CharacterSearchPageState extends ConsumerState<CharacterSearchPage> {
                         width: 150,
                         fit: BoxFit.contain,
                       ),
+                      const SizedBox(height: AppSpacing.sm),
                       Text("Search to find characters"),
                     ],
                   ),
@@ -168,6 +169,7 @@ class _CharacterSearchPageState extends ConsumerState<CharacterSearchPage> {
                         width: 150,
                         fit: BoxFit.contain,
                       ),
+                      const SizedBox(height: AppSpacing.sm),
                       Text("No results found :("),
                     ],
                   ),

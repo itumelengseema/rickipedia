@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:rickipedia/features/character/models/character_model.dart';
 import 'package:rickipedia/features/character/providers/character_search_controller.dart';
+import 'package:rickipedia/shared/widgets/SearchResultsList.dart';
 import 'package:rickipedia/theme/app_colours.dart';
 import 'package:rickipedia/theme/app_spacing.dart';
 import 'package:rickipedia/theme/app_text_style.dart';
@@ -172,34 +174,26 @@ class _CharacterSearchPageState extends ConsumerState<CharacterSearchPage> {
                 );
               }
 
-              return SliverPadding(
-                padding: const EdgeInsets.all(AppSpacing.md),
-                sliver: SliverList.separated(
-                  itemCount: response.characters.length,
-                  separatorBuilder: (context, index) {
-                    return const SizedBox(height: AppSpacing.sm);
-                  },
-                  itemBuilder: (context, index) {
-                    final character = response.characters[index];
-
-                    return ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      leading: ClipRRect(
-                        borderRadius: BorderRadius.circular(6),
-                        child: Image.network(
-                          character.image,
-                          width: 64,
-                          height: 64,
-                          fit: BoxFit.cover,
-                        ),
+              return SearchResultsList<Character>(
+                items: response.characters,
+                itemBuilder: (context, character) {
+                  return ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: ClipRRect(
+                      borderRadius: BorderRadius.circular(6),
+                      child: Image.network(
+                        character.image,
+                        width: 64,
+                        height: 64,
+                        fit: BoxFit.cover,
                       ),
-                      title: Text(character.name),
-                      subtitle: Text(
-                        '${character.species} • ${character.status}',
-                      ),
-                    );
-                  },
-                ),
+                    ),
+                    title: Text(character.name),
+                    subtitle: Text(
+                      '${character.species} • ${character.status}',
+                    ),
+                  );
+                },
               );
             },
           ),

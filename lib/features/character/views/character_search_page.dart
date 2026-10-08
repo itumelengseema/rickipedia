@@ -1,10 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rickipedia/theme/app_colours.dart';
 import 'package:rickipedia/theme/app_spacing.dart';
 import 'package:rickipedia/theme/app_text_style.dart';
 
-class CharacterSearchPage extends StatelessWidget {
+class CharacterSearchPage extends ConsumerStatefulWidget {
   const CharacterSearchPage({super.key});
+
+  @override
+  ConsumerState<CharacterSearchPage> createState() =>
+      _CharacterSearchPageState();
+}
+
+class _CharacterSearchPageState extends ConsumerState<CharacterSearchPage> {
+  final TextEditingController searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +34,7 @@ class CharacterSearchPage extends StatelessWidget {
             snap: true,
             pinned: false,
             expandedHeight: 110,
-            title: Text("Search"),
+            title: const Text("Search"),
             flexibleSpace: FlexibleSpaceBar(
               background: SafeArea(
                 child: Padding(
@@ -45,8 +60,10 @@ class CharacterSearchPage extends StatelessWidget {
                           children: [
                             const Icon(Icons.search, size: 20),
                             const SizedBox(width: AppSpacing.sm),
-                            const Expanded(
+                            Expanded(
                               child: TextField(
+                                controller: searchController,
+
                                 decoration: InputDecoration(
                                   border: InputBorder.none,
                                   hintText: "Search Characters",
@@ -55,10 +72,17 @@ class CharacterSearchPage extends StatelessWidget {
                               ),
                             ),
 
-                            //add check to only show when text is inputted if clear dont show
-                            GestureDetector(
-                              onDoubleTap: () {},
-                              child: const Icon(Icons.clear, size: 20),
+                            ValueListenableBuilder(
+                              valueListenable: searchController,
+                              builder: (context, value, child) {
+                                if (value.text.isEmpty) {
+                                  return SizedBox.shrink();
+                                }
+                                return IconButton(
+                                  onPressed: searchController.clear,
+                                  icon: Icon(Icons.clear, size: 20),
+                                );
+                              },
                             ),
                           ],
                         ),

@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-
-import '../../../theme/app_colours.dart';
-import '../../../theme/app_spacing.dart';
-import '../../features/character/models/character_model.dart';
-import '../../theme/app_text_style.dart';
+import 'package:rickipedia/features/character/models/character_model.dart';
+import 'package:rickipedia/theme/app_colours.dart';
+import 'package:rickipedia/theme/app_spacing.dart';
+import 'package:rickipedia/theme/app_text_style.dart';
 
 class CharacterCard extends StatelessWidget {
   final Character character;

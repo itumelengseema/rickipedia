@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:rickipedia/features/character/providers/character_search_controller.dart';
 import 'package:rickipedia/theme/app_colours.dart';
 import 'package:rickipedia/theme/app_spacing.dart';
 import 'package:rickipedia/theme/app_text_style.dart';
@@ -23,6 +25,8 @@ class _CharacterSearchPageState extends ConsumerState<CharacterSearchPage> {
 
   @override
   Widget build(BuildContext context) {
+    late final searchState = ref.watch(characterSearchControllerProvider);
+
     return Scaffold(
       body: CustomScrollView(
         slivers: [
@@ -63,7 +67,15 @@ class _CharacterSearchPageState extends ConsumerState<CharacterSearchPage> {
                             Expanded(
                               child: TextField(
                                 controller: searchController,
-
+                                onChanged: (query) {
+                                  debugPrint('UI sent: $query');
+                                  ref
+                                      .read(
+                                        characterSearchControllerProvider
+                                            .notifier,
+                                      )
+                                      .search(query);
+                                },
                                 decoration: InputDecoration(
                                   border: InputBorder.none,
                                   hintText: "Search Characters",
@@ -79,7 +91,15 @@ class _CharacterSearchPageState extends ConsumerState<CharacterSearchPage> {
                                   return SizedBox.shrink();
                                 }
                                 return IconButton(
-                                  onPressed: searchController.clear,
+                                  onPressed: () {
+                                    searchController.clear();
+                                    ref
+                                        .read(
+                                          characterSearchControllerProvider
+                                              .notifier,
+                                        )
+                                        .search('');
+                                  },
                                   icon: Icon(Icons.clear, size: 20),
                                 );
                               },
@@ -92,6 +112,96 @@ class _CharacterSearchPageState extends ConsumerState<CharacterSearchPage> {
                 ),
               ),
             ),
+          ),
+          searchState.when(
+            loading: () {
+              return SliverFillRemaining(
+                hasScrollBody: false,
+                child: Center(child: CircularProgressIndicator()),
+              );
+            },
+            error: (error, stackTrace) {
+              return SliverFillRemaining(
+                hasScrollBody: false,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SvgPicture.asset(
+                      'assets/images/searchImage.svg',
+                      width: 150,
+                      fit: BoxFit.contain,
+                    ),
+                    Text("Search to find characters"),
+                  ],
+                ),
+              );
+            },
+            data: (response) {
+              debugPrint('Results: ${response?.characters.length}');
+              if (response == null) {
+                return SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SvgPicture.asset(
+                        'assets/images/searchImage.svg',
+                        width: 150,
+                        fit: BoxFit.contain,
+                      ),
+                      Text("Search to find characters"),
+                    ],
+                  ),
+                );
+              }
+
+              if (response.characters.isEmpty) {
+                return SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SvgPicture.asset(
+                        'assets/images/notFound.svg',
+                        width: 150,
+                        fit: BoxFit.contain,
+                      ),
+                      Text("No results found :("),
+                    ],
+                  ),
+                );
+              }
+
+              return SliverPadding(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                sliver: SliverList.separated(
+                  itemCount: response.characters.length,
+                  separatorBuilder: (context, index) {
+                    return const SizedBox(height: AppSpacing.sm);
+                  },
+                  itemBuilder: (context, index) {
+                    final character = response.characters[index];
+
+                    return ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: ClipRRect(
+                        borderRadius: BorderRadius.circular(6),
+                        child: Image.network(
+                          character.image,
+                          width: 64,
+                          height: 64,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      title: Text(character.name),
+                      subtitle: Text(
+                        '${character.species} • ${character.status}',
+                      ),
+                    );
+                  },
+                ),
+              );
+            },
           ),
         ],
       ),

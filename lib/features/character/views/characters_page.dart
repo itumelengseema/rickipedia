@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:rickipedia/features/character/providers/character_controller.dart';
+import 'package:rickipedia/features/character/views/character_search_page.dart';
+import 'package:rickipedia/shared/widgets/character_card.dart'
+    show CharacterCard;
 import 'package:rickipedia/shared/widgets/search_text_input.dart';
+import 'package:rickipedia/theme/app_colours.dart';
 import 'package:rickipedia/theme/app_spacing.dart';
-
-import '../../../shared/widgets/character_card.dart';
-import '../../../theme/app_colours.dart';
-import '../providers/character_controller.dart';
 
 class CharactersPage extends ConsumerWidget {
   const CharactersPage({super.key});
@@ -68,7 +69,15 @@ class CharactersPage extends ConsumerWidget {
                       ),
                       const SizedBox(height: AppSpacing.sm),
                       GestureDetector(
-                        onTap: () {},
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) {
+                                return CharacterSearchPage();
+                              },
+                            ),
+                          );
+                        },
                         child: const SearchTextInput(),
                       ),
                     ],

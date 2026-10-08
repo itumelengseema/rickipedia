@@ -70,7 +70,6 @@ class _CharacterSearchPageState extends ConsumerState<CharacterSearchPage> {
                               child: TextField(
                                 controller: searchController,
                                 onChanged: (query) {
-                                  debugPrint('UI sent: $query');
                                   ref
                                       .read(
                                         characterSearchControllerProvider

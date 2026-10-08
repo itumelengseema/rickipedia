@@ -18,7 +18,7 @@ class FakeCharacterRepository implements CharacterRepository {
   int fetchCalls = 0;
 
   @override
-  Future<CharacterResponse> fetchCharacters({int page = 4, String? name}) {
+  Future<CharacterResponse> fetchCharacters({int page = 1, String? name}) {
     return _responses[fetchCalls++]();
   }
 }
@@ -111,7 +111,7 @@ void main() {
       ]);
 
       await pumpPage(tester, repository);
-      await tester.pump();
+      await tester.pumpAndSettle();
 
       expect(find.byIcon(Icons.error_outline), findsOneWidget);
       expect(find.text('Failed to load characters'), findsOneWidget);
@@ -128,7 +128,7 @@ void main() {
       ]);
 
       await pumpPage(tester, repository);
-      await tester.pump();
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Retry'));
       await tester.pump();
 

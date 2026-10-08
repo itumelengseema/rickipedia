@@ -73,7 +73,7 @@ class CharactersPage extends ConsumerWidget {
                           Navigator.of(context).push(
                             MaterialPageRoute(
                               builder: (context) {
-                                return CharacterSearchPage();
+                                return const CharacterSearchPage();
                               },
                             ),
                           );

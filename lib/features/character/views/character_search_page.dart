@@ -27,7 +27,7 @@ class _CharacterSearchPageState extends ConsumerState<CharacterSearchPage> {
 
   @override
   Widget build(BuildContext context) {
-    late final searchState = ref.watch(characterSearchControllerProvider);
+    final searchState = ref.watch(characterSearchControllerProvider);
 
     return Scaffold(
       body: CustomScrollView(

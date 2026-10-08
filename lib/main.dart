@@ -1,7 +1,8 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app/rickipedia_app.dart';
 
 void main() {
-  runApp(RickipediaApp());
+  runApp(ProviderScope(child: RickipediaApp()));
 }

@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rickipedia/core/network/http_client.dart';
-import 'package:rickipedia/features/character/data/character_api_data_source.dart';
+import 'package:rickipedia/features/character/data/character_remote_data_source.dart';
 
 class FakeHttpClient implements HttpClient {
   final HttpResponse response;
@@ -57,7 +57,7 @@ void main() {
       response: HttpResponse(statusCode: 200, body: jsonEncode(json)),
     );
 
-    final dataSource = CharacterApiDataSource(client: fakeClient);
+    final dataSource = CharacterRemoteDataSource(client: fakeClient);
 
     final result = await dataSource.fetchCharacters(page: 2);
 
@@ -76,7 +76,7 @@ void main() {
       response: HttpResponse(statusCode: 200, body: jsonEncode(json)),
     );
 
-    final dataSource = CharacterApiDataSource(client: fakeClient);
+    final dataSource = CharacterRemoteDataSource(client: fakeClient);
 
     await dataSource.fetchCharacters(name: 'Rick');
 
@@ -91,7 +91,7 @@ void main() {
       response: HttpResponse(statusCode: 200, body: jsonEncode(json)),
     );
 
-    final dataSource = CharacterApiDataSource(client: fakeClient);
+    final dataSource = CharacterRemoteDataSource(client: fakeClient);
 
     await dataSource.fetchCharacters(name: '  Rick  ');
 
@@ -105,7 +105,7 @@ void main() {
       response: HttpResponse(statusCode: 200, body: jsonEncode(json)),
     );
 
-    final dataSource = CharacterApiDataSource(client: fakeClient);
+    final dataSource = CharacterRemoteDataSource(client: fakeClient);
 
     await dataSource.fetchCharacters(name: '   ');
 
@@ -123,7 +123,7 @@ void main() {
       ),
     );
 
-    final dataSource = CharacterApiDataSource(client: fakeClient);
+    final dataSource = CharacterRemoteDataSource(client: fakeClient);
 
     final result = await dataSource.fetchCharacters(
       name: 'DefinitelyNotACharacter',
@@ -144,7 +144,7 @@ void main() {
       ),
     );
 
-    final dataSource = CharacterApiDataSource(client: fakeClient);
+    final dataSource = CharacterRemoteDataSource(client: fakeClient);
 
     expect(() => dataSource.fetchCharacters(), throwsA(isA<Exception>()));
   });
@@ -159,7 +159,7 @@ void main() {
         ),
       );
 
-      final dataSource = CharacterApiDataSource(client: fakeClient);
+      final dataSource = CharacterRemoteDataSource(client: fakeClient);
 
       final result = await dataSource.fetchCharacters(page: 2, name: 'Rick');
 

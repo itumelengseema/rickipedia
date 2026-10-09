@@ -3,8 +3,8 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rickipedia/core/network/http_client.dart';
-import 'package:rickipedia/features/character/data/character_api_data_source.dart';
 import 'package:rickipedia/features/character/data/character_data_source.dart';
+import 'package:rickipedia/features/character/data/character_remote_data_source.dart';
 import 'package:rickipedia/features/character/models/character_response_model.dart';
 import 'package:rickipedia/features/character/providers/character_providers.dart';
 import 'package:rickipedia/features/character/repositories/character_repository_impl.dart';
@@ -56,7 +56,7 @@ void main() {
 
       final dataSource = container.read(characterDataSourceProvider);
 
-      expect(dataSource, isA<CharacterApiDataSource>());
+      expect(dataSource, isA<CharacterRemoteDataSource>());
       await dataSource.fetchCharacters(page: 2);
       expect(Uri.parse(client.requestedUrl!).queryParameters['page'], '2');
     },

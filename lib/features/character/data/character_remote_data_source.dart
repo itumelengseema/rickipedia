@@ -5,10 +5,10 @@ import 'package:rickipedia/core/network/http_client.dart';
 import '../models/character_response_model.dart';
 import 'character_data_source.dart';
 
-class CharacterApiDataSource implements CharacterDataSource {
+class CharacterRemoteDataSource implements CharacterDataSource {
   final HttpClient client;
 
-  CharacterApiDataSource({required this.client});
+  CharacterRemoteDataSource({required this.client});
 
   @override
   Future<CharacterResponse> fetchCharacters({

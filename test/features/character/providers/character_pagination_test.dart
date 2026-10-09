@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:rickipedia/features/character/models/character_response_model.dart';
 import 'package:rickipedia/features/character/providers/character_controller.dart';
 import 'package:rickipedia/features/character/providers/character_providers.dart';
+import 'package:rickipedia/features/character/providers/pagination_provider.dart';
 
 import '../../../support/character_fixtures.dart';
 import '../../../support/fakes.dart';
@@ -93,13 +94,13 @@ void main() {
       container.read(characterControllerProvider).requireValue.characters,
       hasLength(1),
     );
-    expect(controller.loadMoreError, isNotNull);
+    expect(container.read(paginationStateProvider).error, isNotNull);
 
     await controller.loadNextPage();
     expect(
       container.read(characterControllerProvider).requireValue.characters,
       hasLength(2),
     );
-    expect(controller.loadMoreError, isNull);
+    expect(container.read(paginationStateProvider).error, isNull);
   });
 }

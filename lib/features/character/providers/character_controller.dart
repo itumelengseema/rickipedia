@@ -3,14 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/character_response_model.dart';
 import '../repositories/character_repository.dart';
 import 'character_providers.dart';
+import 'pagination_provider.dart';
 
 class CharacterController extends AsyncNotifier<CharacterResponse> {
-  late final CharacterRepository _repository;
-  bool _isLoadingMore = false;
-  Object? _loadMoreError;
-
-  bool get isLoadingMore => _isLoadingMore;
-  Object? get loadMoreError => _loadMoreError;
+  late CharacterRepository _repository;
 
   @override
   Future<CharacterResponse> build() async {
@@ -20,8 +16,9 @@ class CharacterController extends AsyncNotifier<CharacterResponse> {
   }
 
   Future<void> retry() async {
-    _isLoadingMore = false;
-    _loadMoreError = null;
+    // Reset pagination when reloading the first page.
+    ref.read(paginationStateProvider.notifier).reset();
+
     state = const AsyncLoading();
 
     state = await AsyncValue.guard(() => _repository.fetchCharacters());
@@ -29,18 +26,23 @@ class CharacterController extends AsyncNotifier<CharacterResponse> {
 
   Future<void> loadNextPage() async {
     final current = state.value;
-    if (current == null || current.next == null || _isLoadingMore) {
+    final pagination = ref.read(paginationStateProvider);
+
+    // Don't request another page if there is no next page
+    // or if a request is already in progress.
+    if (current == null || current.next == null || pagination.isLoading) {
       return;
     }
 
-    _isLoadingMore = true;
-    _loadMoreError = null;
-    state = AsyncData(current);
+    final paginationNotifier = ref.read(paginationStateProvider.notifier);
+
+    paginationNotifier.startLoading();
 
     try {
       final nextPage = await _repository.fetchCharacters(
         page: _pageFrom(current.next!),
       );
+
       if (!ref.mounted) return;
 
       state = AsyncData(
@@ -52,15 +54,12 @@ class CharacterController extends AsyncNotifier<CharacterResponse> {
           characters: [...current.characters, ...nextPage.characters],
         ),
       );
+
+      ref.read(paginationStateProvider.notifier).reset();
     } catch (error) {
       if (!ref.mounted) return;
-      _loadMoreError = error;
-      state = AsyncData(current);
-    } finally {
-      _isLoadingMore = false;
-      if (ref.mounted) {
-        state = AsyncData(state.value ?? current);
-      }
+
+      ref.read(paginationStateProvider.notifier).setError(error);
     }
   }
 

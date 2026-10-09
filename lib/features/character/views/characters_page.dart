@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rickipedia/features/character/providers/character_controller.dart';
+import 'package:rickipedia/features/character/providers/pagination_provider.dart';
 import 'package:rickipedia/features/character/views/character_search_page.dart';
-import 'package:rickipedia/shared/widgets/character_card.dart'
-    show CharacterCard;
+import 'package:rickipedia/shared/widgets/character_card.dart';
 import 'package:rickipedia/shared/widgets/primary_button.dart';
 import 'package:rickipedia/shared/widgets/search_text_input.dart';
 import 'package:rickipedia/theme/app_colours.dart';
 import 'package:rickipedia/theme/app_spacing.dart';
+import 'package:rickipedia/theme/app_text_style.dart' show AppTextStyles;
 
 class CharactersPage extends ConsumerStatefulWidget {
   const CharactersPage({super.key});
@@ -26,6 +27,8 @@ class _CharactersPageState extends ConsumerState<CharactersPage> {
   }
 
   void _loadMoreNearBottom() {
+    if (!_scrollController.hasClients) return;
+
     if (_scrollController.position.extentAfter < 300) {
       ref.read(characterControllerProvider.notifier).loadNextPage();
     }
@@ -33,6 +36,7 @@ class _CharactersPageState extends ConsumerState<CharactersPage> {
 
   @override
   void dispose() {
+    _scrollController.removeListener(_loadMoreNearBottom);
     _scrollController.dispose();
     super.dispose();
   }
@@ -40,6 +44,7 @@ class _CharactersPageState extends ConsumerState<CharactersPage> {
   @override
   Widget build(BuildContext context) {
     final characterState = ref.watch(characterControllerProvider);
+    final paginationState = ref.watch(paginationStateProvider);
 
     return Scaffold(
       body: CustomScrollView(
@@ -114,6 +119,7 @@ class _CharactersPageState extends ConsumerState<CharactersPage> {
             ),
           ),
 
+          // Character loading, error and success states
           characterState.when(
             loading: () => const SliverFillRemaining(
               hasScrollBody: false,
@@ -131,10 +137,10 @@ class _CharactersPageState extends ConsumerState<CharactersPage> {
                     const Text('Failed to load characters'),
                     const SizedBox(height: AppSpacing.sm),
                     PrimaryButton(
+                      label: 'Retry',
                       onPressed: () {
                         ref.read(characterControllerProvider.notifier).retry();
                       },
-                      label: "Retry",
                     ),
                   ],
                 ),
@@ -150,8 +156,10 @@ class _CharactersPageState extends ConsumerState<CharactersPage> {
               }
 
               final controller = ref.read(characterControllerProvider.notifier);
+
               return SliverMainAxisGroup(
                 slivers: [
+                  // Character grid
                   SliverPadding(
                     padding: const EdgeInsets.all(AppSpacing.md),
                     sliver: SliverGrid(
@@ -169,24 +177,48 @@ class _CharactersPageState extends ConsumerState<CharactersPage> {
                           ),
                     ),
                   ),
-                  if (controller.isLoadingMore)
+
+                  // Pagination loading indicator
+                  if (paginationState.isLoading)
                     const SliverToBoxAdapter(
                       child: Padding(
                         padding: EdgeInsets.all(AppSpacing.md),
                         child: Center(child: CircularProgressIndicator()),
                       ),
                     )
-                  else if (controller.loadMoreError != null)
+                  // Pagination error and retry
+                  else if (paginationState.error != null)
                     SliverToBoxAdapter(
                       child: Padding(
                         padding: const EdgeInsets.all(AppSpacing.md),
-                        child: Center(
-                          child: PrimaryButton(
-                            label: 'Retry',
-                            onPressed: () {
-                              controller.loadNextPage();
-                            },
-                          ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.error_outline,
+                              color: AppColors.error,
+                              size: 28,
+                            ),
+                            const SizedBox(height: AppSpacing.sm),
+                            const Text(
+                              'Could not load more characters',
+                              textAlign: TextAlign.center,
+                              style: AppTextStyles.productTitle,
+                            ),
+                            const SizedBox(height: AppSpacing.sm),
+                            const Text(
+                              'Check your connection and try again.',
+                              textAlign: TextAlign.center,
+                              style: AppTextStyles.body,
+                            ),
+                            const SizedBox(height: AppSpacing.md),
+                            PrimaryButton(
+                              label: 'Retry',
+                              onPressed: () {
+                                controller.loadNextPage();
+                              },
+                            ),
+                          ],
                         ),
                       ),
                     ),

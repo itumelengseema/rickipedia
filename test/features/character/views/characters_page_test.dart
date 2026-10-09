@@ -60,6 +60,7 @@ Future<void> pumpPage(
 ) async {
   await tester.pumpWidget(
     ProviderScope(
+      retry: (_, _) => null,
       overrides: [characterRepositoryProvider.overrideWithValue(repository)],
       child: const MaterialApp(home: CharactersPage()),
     ),
@@ -131,12 +132,13 @@ void main() {
     ) async {
       final retryRequest = Completer<CharacterResponse>();
       final repository = FakeCharacterRepository([
-        () async => throw Exception('request failed'),
+        () => Future<CharacterResponse>.error(Exception('request failed')),
         () => retryRequest.future,
       ]);
 
       await pumpPage(tester, repository);
       await tester.pumpAndSettle();
+      expect(find.text('Retry'), findsOneWidget);
       await tester.tap(find.text('Retry'));
       await tester.pump();
 

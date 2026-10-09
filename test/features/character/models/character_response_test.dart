@@ -1,7 +1,21 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rickipedia/features/character/models/character_response_model.dart';
 
+import '../../../support/character_fixtures.dart';
+
 void main() {
+  test('parses response and nested models from a deterministic fixture', () {
+    final response = responseFixture('characters_page_1.json');
+
+    expect(response.count, 2);
+    expect(response.pages, 2);
+    expect(response.next, endsWith('page=2'));
+    expect(response.characters.single.name, 'Rick Sanchez');
+    expect(response.characters.single.origin.name, 'Earth (C-137)');
+    expect(response.characters.single.location.name, 'Citadel of Ricks');
+    expect(response.characters.single.episode, hasLength(1));
+  });
+
   test('parses pagination metadata and empty results', () {
     // Arrange
     final json = <String, dynamic>{

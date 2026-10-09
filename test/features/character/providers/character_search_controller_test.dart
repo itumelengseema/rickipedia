@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rickipedia/features/character/models/character_model.dart';
@@ -168,6 +170,40 @@ void main() {
       final state = container.read(characterSearchControllerProvider);
       expect(state, isA<AsyncError<CharacterResponse?>>());
       expect(state.error, same(error));
+    });
+
+    testWidgets('a stale response cannot replace results for a newer query', (
+      tester,
+    ) async {
+      final rick = Completer<CharacterResponse>();
+      final morty = Completer<CharacterResponse>();
+      createContainer(
+        onFetch: (name) => name == 'Rick' ? rick.future : morty.future,
+      );
+      await tester.pump();
+
+      container.read(characterSearchControllerProvider.notifier).search('Rick');
+      await tester.pump(const Duration(milliseconds: 500));
+      container
+          .read(characterSearchControllerProvider.notifier)
+          .search('Morty');
+      await tester.pump(const Duration(milliseconds: 500));
+
+      morty.complete(responseWith([character(id: 2, name: 'Morty Smith')]));
+      await tester.pump();
+      rick.complete(responseWith([character(id: 1, name: 'Rick Sanchez')]));
+      await tester.pump();
+
+      expect(repository.searchedNames, ['Rick', 'Morty']);
+      expect(
+        container
+            .read(characterSearchControllerProvider)
+            .value!
+            .characters
+            .single
+            .name,
+        'Morty Smith',
+      );
     });
 
     testWidgets(

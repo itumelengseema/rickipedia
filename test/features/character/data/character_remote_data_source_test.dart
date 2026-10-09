@@ -1,8 +1,12 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rickipedia/core/network/http_client.dart';
 import 'package:rickipedia/features/character/data/character_remote_data_source.dart';
+
+import '../../../support/character_fixtures.dart';
 
 class FakeHttpClient implements HttpClient {
   final HttpResponse response;
@@ -18,6 +22,18 @@ class FakeHttpClient implements HttpClient {
     lastUrl = url;
     return response;
   }
+}
+
+class FailingHttpClient implements HttpClient {
+  FailingHttpClient(this.error);
+
+  final Object error;
+
+  @override
+  void close() {}
+
+  @override
+  Future<HttpResponse> get(String url) => Future.error(error);
 }
 
 void main() {
@@ -119,7 +135,7 @@ void main() {
     final fakeClient = FakeHttpClient(
       response: HttpResponse(
         statusCode: 404,
-        body: jsonEncode({"error": "There is nothing here"}),
+        body: fixture('no_matches.json'),
       ),
     );
 
@@ -149,13 +165,44 @@ void main() {
     expect(() => dataSource.fetchCharacters(), throwsA(isA<Exception>()));
   });
 
+  test('reports malformed successful JSON as a format failure', () async {
+    final dataSource = CharacterRemoteDataSource(
+      client: FakeHttpClient(
+        response: HttpResponse(
+          statusCode: 200,
+          body: fixture('malformed.json'),
+        ),
+      ),
+    );
+
+    await expectLater(dataSource.fetchCharacters(), throwsFormatException);
+  });
+
+  test('propagates timeout failures', () async {
+    final timeout = TimeoutException('request timed out');
+    final dataSource = CharacterRemoteDataSource(
+      client: FailingHttpClient(timeout),
+    );
+
+    await expectLater(dataSource.fetchCharacters(), throwsA(same(timeout)));
+  });
+
+  test('propagates network failures', () async {
+    final failure = const SocketException('offline');
+    final dataSource = CharacterRemoteDataSource(
+      client: FailingHttpClient(failure),
+    );
+
+    await expectLater(dataSource.fetchCharacters(), throwsA(same(failure)));
+  });
+
   test(
     'returns empty response when search has no results on later page',
     () async {
       final fakeClient = FakeHttpClient(
         response: HttpResponse(
           statusCode: 404,
-          body: jsonEncode({"error": "There is nothing here"}),
+          body: fixture('no_matches.json'),
         ),
       );
 

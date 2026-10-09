@@ -4,19 +4,46 @@ import 'package:rickipedia/features/character/providers/character_controller.dar
 import 'package:rickipedia/features/character/views/character_search_page.dart';
 import 'package:rickipedia/shared/widgets/character_card.dart'
     show CharacterCard;
+import 'package:rickipedia/shared/widgets/primary_button.dart';
 import 'package:rickipedia/shared/widgets/search_text_input.dart';
 import 'package:rickipedia/theme/app_colours.dart';
 import 'package:rickipedia/theme/app_spacing.dart';
 
-class CharactersPage extends ConsumerWidget {
+class CharactersPage extends ConsumerStatefulWidget {
   const CharactersPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<CharactersPage> createState() => _CharactersPageState();
+}
+
+class _CharactersPageState extends ConsumerState<CharactersPage> {
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_loadMoreNearBottom);
+  }
+
+  void _loadMoreNearBottom() {
+    if (_scrollController.position.extentAfter < 300) {
+      ref.read(characterControllerProvider.notifier).loadNextPage();
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final characterState = ref.watch(characterControllerProvider);
 
     return Scaffold(
       body: CustomScrollView(
+        controller: _scrollController,
         slivers: [
           SliverAppBar(
             backgroundColor: AppColors.white,
@@ -103,11 +130,11 @@ class CharactersPage extends ConsumerWidget {
                     const SizedBox(height: AppSpacing.sm),
                     const Text('Failed to load characters'),
                     const SizedBox(height: AppSpacing.sm),
-                    ElevatedButton(
+                    PrimaryButton(
                       onPressed: () {
                         ref.read(characterControllerProvider.notifier).retry();
                       },
-                      child: const Text('Retry'),
+                      label: "Retry",
                     ),
                   ],
                 ),
@@ -122,21 +149,48 @@ class CharactersPage extends ConsumerWidget {
                 );
               }
 
-              return SliverPadding(
-                padding: const EdgeInsets.all(AppSpacing.md),
-                sliver: SliverGrid(
-                  delegate: SliverChildBuilderDelegate((context, index) {
-                    final character = response.characters[index];
+              final controller = ref.read(characterControllerProvider.notifier);
+              return SliverMainAxisGroup(
+                slivers: [
+                  SliverPadding(
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    sliver: SliverGrid(
+                      delegate: SliverChildBuilderDelegate((context, index) {
+                        final character = response.characters[index];
 
-                    return CharacterCard(character: character);
-                  }, childCount: response.characters.length),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: AppSpacing.md,
-                    mainAxisSpacing: AppSpacing.md,
-                    childAspectRatio: 0.72,
+                        return CharacterCard(character: character);
+                      }, childCount: response.characters.length),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            crossAxisSpacing: AppSpacing.md,
+                            mainAxisSpacing: AppSpacing.md,
+                            childAspectRatio: 0.72,
+                          ),
+                    ),
                   ),
-                ),
+                  if (controller.isLoadingMore)
+                    const SliverToBoxAdapter(
+                      child: Padding(
+                        padding: EdgeInsets.all(AppSpacing.md),
+                        child: Center(child: CircularProgressIndicator()),
+                      ),
+                    )
+                  else if (controller.loadMoreError != null)
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        child: Center(
+                          child: PrimaryButton(
+                            label: 'Retry',
+                            onPressed: () {
+                              controller.loadNextPage();
+                            },
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               );
             },
           ),

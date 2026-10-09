@@ -39,6 +39,25 @@ ProviderContainer createContainer(CharacterRepository repository) {
 
 void main() {
   group('CharacterController', () {
+    test('starts in loading while the initial request is pending', () async {
+      final request = Completer<CharacterResponse>();
+      final repository = FakeCharacterRepository([() => request.future]);
+      final container = createContainer(repository);
+
+      final subscription = container.listen(
+        characterControllerProvider,
+        (_, _) {},
+        fireImmediately: true,
+      );
+      addTearDown(subscription.close);
+
+      expect(container.read(characterControllerProvider).isLoading, isTrue);
+      expect(repository.fetchCalls, 1);
+
+      request.complete(emptyResponse());
+      await container.read(characterControllerProvider.future);
+    });
+
     test('loads characters from the repository when built', () async {
       final expected = emptyResponse(count: 2);
       final repository = FakeCharacterRepository([() async => expected]);
@@ -49,6 +68,19 @@ void main() {
       expect(result, same(expected));
       expect(repository.fetchCalls, 1);
       expect(container.read(characterControllerProvider).value, same(expected));
+    });
+
+    test('exposes an empty successful response as data', () async {
+      final expected = emptyResponse();
+      final repository = FakeCharacterRepository([() async => expected]);
+      final container = createContainer(repository);
+
+      await container.read(characterControllerProvider.future);
+
+      final state = container.read(characterControllerProvider);
+      expect(state, isA<AsyncData<CharacterResponse>>());
+      expect(state.requireValue.characters, isEmpty);
+      expect(state.hasError, isFalse);
     });
 
     test('exposes an error when the initial request fails', () async {

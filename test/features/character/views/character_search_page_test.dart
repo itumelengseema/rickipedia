@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -99,6 +100,26 @@ void main() {
 
       expect(repository.searchedNames, isEmpty);
       expect(find.text('Search to find characters'), findsOneWidget);
+    });
+
+    testWidgets('shows loading while a search request is pending', (
+      tester,
+    ) async {
+      final request = Completer<CharacterResponse>();
+      final repository = FakeCharacterRepository(
+        onFetch: (_) => request.future,
+      );
+      await pumpSearchPage(tester, repository);
+
+      await tester.enterText(find.byType(TextField), 'Rick');
+      await tester.pump(const Duration(milliseconds: 500));
+
+      expect(repository.searchedNames, ['Rick']);
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.text('Search to find characters'), findsNothing);
+
+      request.complete(responseWith([]));
+      await tester.pump();
     });
 
     testWidgets('typing at least two characters displays matching results', (

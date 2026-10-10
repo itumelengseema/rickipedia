@@ -268,6 +268,11 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(pageTwoAttempts, 2);
+      await tester.scrollUntilVisible(
+        find.text('Recovered Character'),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
       expect(find.text('Recovered Character'), findsOneWidget);
       expect(
         find.text("Couldn't load more characters. Please try again."),

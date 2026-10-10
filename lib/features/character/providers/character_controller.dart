@@ -35,6 +35,18 @@ class CharacterController extends AsyncNotifier<CharacterResponse> {
     state = result;
   }
 
+  Future<void> retryNextPage() async {
+    final pagination = ref.read(paginationStateProvider);
+
+    if (state.isLoading || pagination.isLoading || pagination.error == null) {
+      return;
+    }
+
+    ref.read(paginationStateProvider.notifier).reset();
+
+    await loadNextPage();
+  }
+
   Future<void> loadNextPage() async {
     if (state.isLoading) return;
 
@@ -43,7 +55,10 @@ class CharacterController extends AsyncNotifier<CharacterResponse> {
 
     // Don't request another page if there is no next page
     // or if a request is already in progress.
-    if (current == null || current.next == null || pagination.isLoading) {
+    if (current == null ||
+        current.next == null ||
+        pagination.isLoading ||
+        pagination.error != null) {
       return;
     }
     final requestVersion = _requestVersion;

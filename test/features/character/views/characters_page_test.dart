@@ -221,5 +221,58 @@ void main() {
       expect(repository.requestedPages, [1, 2]);
       expect(find.byType(CircularProgressIndicator), findsNothing);
     });
+
+    testWidgets('pagination failure shows a snackbar whose Retry loads again', (
+      tester,
+    ) async {
+      var pageTwoAttempts = 0;
+      final firstPageCharacters = List.generate(
+        10,
+        (index) => character(id: index + 1, name: 'Character ${index + 1}'),
+      );
+      final repository = FakeCharacterRepository([
+        () async => responseWith(
+          firstPageCharacters,
+          count: 11,
+          pages: 2,
+          next: 'https://rickandmortyapi.com/api/character?page=2',
+        ),
+        () async {
+          pageTwoAttempts++;
+          throw Exception('offline');
+        },
+        () async {
+          pageTwoAttempts++;
+          return responseWith(
+            [character(id: 11, name: 'Recovered Character')],
+            count: 11,
+            pages: 2,
+            prev: 'https://rickandmortyapi.com/api/character?page=1',
+          );
+        },
+      ]);
+
+      await pumpPage(tester, repository);
+      await tester.pump();
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, -2000));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text("Couldn't load more characters. Please try again."),
+        findsOneWidget,
+      );
+      expect(find.widgetWithText(SnackBarAction, 'Retry'), findsOneWidget);
+      expect(pageTwoAttempts, 1);
+
+      await tester.tap(find.widgetWithText(SnackBarAction, 'Retry'));
+      await tester.pumpAndSettle();
+
+      expect(pageTwoAttempts, 2);
+      expect(find.text('Recovered Character'), findsOneWidget);
+      expect(
+        find.text("Couldn't load more characters. Please try again."),
+        findsNothing,
+      );
+    });
   });
 }

@@ -49,6 +49,7 @@ class _CharactersPageState extends ConsumerState<CharactersPage> {
 
     messenger.showSnackBar(
       SnackBar(
+        behavior: SnackBarBehavior.floating,
         margin: const EdgeInsets.all(AppSpacing.md),
         padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.md,
@@ -66,7 +67,7 @@ class _CharactersPageState extends ConsumerState<CharactersPage> {
         action: SnackBarAction(
           label: 'Retry',
           onPressed: () {
-            ref.read(characterControllerProvider.notifier).loadNextPage();
+            ref.read(characterControllerProvider.notifier).retryNextPage();
           },
         ),
       ),

@@ -8,6 +8,8 @@ import 'pagination_provider.dart';
 class CharacterController extends AsyncNotifier<CharacterResponse> {
   late CharacterRepository _repository;
 
+  int _requestVersion = 0;
+
   @override
   Future<CharacterResponse> build() async {
     _repository = ref.watch(characterRepositoryProvider);
@@ -15,16 +17,27 @@ class CharacterController extends AsyncNotifier<CharacterResponse> {
     return _repository.fetchCharacters();
   }
 
-  Future<void> retry() async {
-    // Reset pagination when reloading the first page.
+  Future<void> retry() => refresh();
+
+  Future<void> refresh() async {
+    final requestVersion = ++_requestVersion;
+
     ref.read(paginationStateProvider.notifier).reset();
 
     state = const AsyncLoading();
 
-    state = await AsyncValue.guard(() => _repository.fetchCharacters());
+    final result = await AsyncValue.guard(() => _repository.fetchCharacters());
+
+    if (!ref.mounted || requestVersion != _requestVersion) {
+      return;
+    }
+
+    state = result;
   }
 
   Future<void> loadNextPage() async {
+    if (state.isLoading) return;
+
     final current = state.value;
     final pagination = ref.read(paginationStateProvider);
 
@@ -33,17 +46,16 @@ class CharacterController extends AsyncNotifier<CharacterResponse> {
     if (current == null || current.next == null || pagination.isLoading) {
       return;
     }
+    final requestVersion = _requestVersion;
 
-    final paginationNotifier = ref.read(paginationStateProvider.notifier);
-
-    paginationNotifier.startLoading();
+    ref.read(paginationStateProvider.notifier).startLoading();
 
     try {
       final nextPage = await _repository.fetchCharacters(
         page: _pageFrom(current.next!),
       );
 
-      if (!ref.mounted) return;
+      if (!ref.mounted || requestVersion != _requestVersion) return;
 
       state = AsyncData(
         CharacterResponse(
@@ -57,7 +69,7 @@ class CharacterController extends AsyncNotifier<CharacterResponse> {
 
       ref.read(paginationStateProvider.notifier).reset();
     } catch (error) {
-      if (!ref.mounted) return;
+      if (!ref.mounted || requestVersion != _requestVersion) return;
 
       ref.read(paginationStateProvider.notifier).setError(error);
     }

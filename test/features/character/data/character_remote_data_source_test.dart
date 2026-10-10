@@ -133,10 +133,7 @@ void main() {
 
   test('returns empty response when no characters match the name', () async {
     final fakeClient = FakeHttpClient(
-      response: HttpResponse(
-        statusCode: 404,
-        body: fixture('no_matches.json'),
-      ),
+      response: HttpResponse(statusCode: 404, body: fixture('no_matches.json')),
     );
 
     final dataSource = CharacterRemoteDataSource(client: fakeClient);

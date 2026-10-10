@@ -77,7 +77,7 @@ void main() {
     await firstRequest;
   });
 
-  test('keeps loaded data and allows retry after load-more failure', () async {
+  test('keeps loaded data and retries failed pagination explicitly', () async {
     var pageTwoAttempts = 0;
     final repository = FakeCharacterRepository((page, _) async {
       if (page == 1) return responseFixture('characters_page_1.json');
@@ -97,10 +97,86 @@ void main() {
     expect(container.read(paginationStateProvider).error, isNotNull);
 
     await controller.loadNextPage();
+    expect(repository.requests, hasLength(2));
+    expect(container.read(paginationStateProvider).error, isNotNull);
+
+    await controller.retryNextPage();
     expect(
       container.read(characterControllerProvider).requireValue.characters,
       hasLength(2),
     );
+    expect(container.read(paginationStateProvider).error, isNull);
+  });
+
+  test('ignores an old pagination success after refresh', () async {
+    final nextPage = Completer<CharacterResponse>();
+    final refreshed = Completer<CharacterResponse>();
+    var pageOneRequests = 0;
+    final repository = FakeCharacterRepository((page, _) {
+      if (page == 2) return nextPage.future;
+
+      pageOneRequests++;
+      if (pageOneRequests == 1) {
+        return Future.value(responseFixture('characters_page_1.json'));
+      }
+      return refreshed.future;
+    });
+    final container = containerFor(repository);
+    await container.read(characterControllerProvider.future);
+    final controller = container.read(characterControllerProvider.notifier);
+
+    final paginationRequest = controller.loadNextPage();
+    final refreshRequest = controller.refresh();
+    final refreshedResponse = characterResponse(
+      characters: [characterFixture(id: 3, name: 'Summer Smith')],
+    );
+    refreshed.complete(refreshedResponse);
+    await refreshRequest;
+
+    nextPage.complete(responseFixture('characters_page_2.json'));
+    await paginationRequest;
+
+    expect(
+      container.read(characterControllerProvider).requireValue,
+      same(refreshedResponse),
+    );
+    expect(container.read(paginationStateProvider).isLoading, isFalse);
+    expect(container.read(paginationStateProvider).error, isNull);
+  });
+
+  test('ignores an old pagination error after refresh', () async {
+    final nextPage = Completer<CharacterResponse>();
+    final refreshed = Completer<CharacterResponse>();
+    var pageOneRequests = 0;
+    final repository = FakeCharacterRepository((page, _) {
+      if (page == 2) return nextPage.future;
+
+      pageOneRequests++;
+      if (pageOneRequests == 1) {
+        return Future.value(responseFixture('characters_page_1.json'));
+      }
+      return refreshed.future;
+    });
+    final container = containerFor(repository);
+    await container.read(characterControllerProvider.future);
+    final controller = container.read(characterControllerProvider.notifier);
+
+    final paginationRequest = controller.loadNextPage();
+    final refreshRequest = controller.refresh();
+    final refreshedResponse = characterResponse(
+      characters: [characterFixture(id: 3, name: 'Summer Smith')],
+    );
+    refreshed.complete(refreshedResponse);
+    await refreshRequest;
+
+    nextPage.completeError(Exception('stale pagination failure'));
+    await paginationRequest;
+
+    expect(
+      container.read(characterControllerProvider).requireValue,
+      same(refreshedResponse),
+    );
+    expect(container.read(paginationStateProvider).isLoading, isFalse);
     expect(container.read(paginationStateProvider).error, isNull);
   });
 }

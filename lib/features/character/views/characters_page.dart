@@ -96,6 +96,7 @@ class _CharactersPageState extends ConsumerState<CharactersPage> {
           return ref.read(characterControllerProvider.notifier).refresh();
         },
         child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
           controller: _scrollController,
           slivers: [
             SliverAppBar(

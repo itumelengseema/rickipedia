@@ -114,6 +114,26 @@ void main() {
       expect(find.byType(CircularProgressIndicator), findsNothing);
     });
 
+    testWidgets('pull to refresh works when content is too short to scroll', (
+      tester,
+    ) async {
+      final repository = FakeCharacterRepository([
+        () async => responseWith([]),
+        () async => responseWith([character(id: 1, name: 'Rick Sanchez')]),
+      ]);
+
+      await pumpPage(tester, repository);
+      await tester.pump();
+
+      expect(find.text('No characters found'), findsOneWidget);
+
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, 300));
+      await tester.pumpAndSettle();
+
+      expect(repository.requestedPages, [1, 1]);
+      expect(find.text('Rick Sanchez'), findsOneWidget);
+    });
+
     testWidgets('shows an error state when the request fails', (tester) async {
       final repository = FakeCharacterRepository([
         () async => throw Exception('request failed'),

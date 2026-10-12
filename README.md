@@ -30,12 +30,12 @@ Character requests and remote portraits need Internet access. Platform folders a
 | --- | --- |
 | Browse | Opens a two-column character grid. Cards show portrait, name, species, and status. Initial requests show a spinner; an empty response shows “No characters found”. |
 | Pagination | Scrolling within 300 pixels of the bottom requests the page from the API's `next` URL. Results append in order with duplicate IDs removed. Requests stop at `next == null`; concurrent page requests are blocked. A footer spinner indicates loading. Failure retains the current cards and shows a snackbar with Retry. |
-| Refresh | Pull down on the grid, including when content is too short to scroll, to request page 1. The grid is replaced by a loading state while refreshing; success replaces accumulated results and metadata. Failure shows the full-page error and Retry. Pagination is blocked during refresh, and results/errors from older page requests are ignored. |
+| Refresh | Pull down on the grid, including when content is too short to scroll, to request page 1. The controller retains the previous response while the request is pending, but the screen replaces the cards with its loading indicator. Success replaces accumulated results and metadata. After failure, the controller still retains the previous response, but the screen shows the full-page error and Retry instead of the cards. Pagination is blocked during refresh, and results/errors from older page requests are ignored. |
 | Basic search | Tap the home search bar to open Search. A trimmed name needs at least two characters. Requests start after a 500 ms debounce; stale responses cannot replace newer searches. Results show portrait, name, species, and status. Clear restores the initial instruction. |
 | Details | Tap a grid card or search result to open the same details page. It uses the selected `Character` without an extra API request. Shows portrait, name, status, species, gender, origin, current location, type, and episode appearance count. Blank About values show “Not specified”; other API values, including “unknown”, are retained. The layout scrolls; Back returns to the originating screen. |
 | Errors | Initial browsing and refresh errors offer Retry. Search errors show “Failed to search characters” without a dedicated Retry action. Grid/details portraits have loading indicators; failed portraits show a broken-image icon, including in search results. |
 
-Refresh retention described in [#5](https://github.com/itumelengseema/rickipedia/issues/5) is not present in the merged controller: it sets `AsyncLoading()` without retaining the previous response. The table above describes the checked-in implementation. Details and both navigation entry points from [#15](https://github.com/itumelengseema/rickipedia/issues/15) are implemented.
+The existing [refresh regression tests](test/features/character/providers/character_pagination_test.dart) verify retained controller data while refreshing and after failure, replacement on success, and stale-request protection. Riverpod preserves previous data when this `AsyncNotifier` assigns `AsyncLoading()`; that assignment alone does not discard the response. Retained data does not guarantee visible cards: the [screen tests](test/features/character/views/characters_page_test.dart) separately verify the loading indicator during a pending request and full-page error/Retry after failure. There is no refresh-error snackbar in this screen; the snackbar belongs to pagination failures. Details and both navigation entry points from [#15](https://github.com/itumelengseema/rickipedia/issues/15) are implemented.
 
 ### Search limitations and planned features
 
@@ -49,7 +49,7 @@ Planned features, not current functionality:
 - Dedicated search Retry in v1.1.
 - Search history.
 
-Inactive profile and menu controls have been removed. Authentication is outside v1.0 scope.
+Profile and menu controls are disabled placeholders (`onPressed: null`); their functionality is outside v1.0 scope. Their icons inherit the disabled button color. Authentication is outside v1.0 scope.
 
 ## Architecture
 
@@ -86,21 +86,21 @@ Run from the repository root:
 
 ```sh
 flutter pub get
-dart format lib test tool
-dart format --output=none --set-exit-if-changed lib test tool
+dart format lib test
+dart format --output=none --set-exit-if-changed lib test
 flutter analyze
 flutter test
 ```
 
 For coverage, run `flutter test --coverage`; the output is `coverage/lcov.info`. To run only the screen tests, use `flutter test test/features/character/views`.
 
-Local verification on 2026-10-13 passed dependency resolution, formatting checks, `flutter analyze`, all 79 app tests, the screenshot capture, and `flutter build web --no-pub`. A successful web build is not a browser interaction test or release certification for the other platforms.
+Local verification on 2026-10-13 passed formatting checks, `flutter analyze`, all 82 app tests, and `git diff --check`. The earlier documentation session also verified dependency resolution and `flutter build web --no-pub`. A successful web build is not a browser interaction test or release certification for the other platforms. Existing screenshots are preserved; the capture tool is not included in this branch.
 
 The current [Flutter CI workflow](.github/workflows/flutter.yml) runs on pushes and pull requests, installs Flutter 3.47.4 with caching, resolves dependencies, analyzes, and tests. Formatting enforcement, coverage summaries/artifacts, and a verified protection check name are owned by [#14](https://github.com/itumelengseema/rickipedia/issues/14); they are not yet steps in this workflow.
 
 ## Screenshots
 
-These are the seven supplied app screenshots, preserved as provided, including device frames, debug banners, overlays, and the cropped pagination error. Some show the profile/menu controls from before their removal in this documentation change. See [screenshot notes](docs/screenshots/README.md) for the file mapping and the separate reproducible widget captures.
+These are the seven supplied app screenshots, preserved as provided, including device frames, debug banners, overlays, and the cropped pagination error. Some show the profile/menu controls before their disabled styling was applied. See [screenshot notes](docs/screenshots/README.md) for the file mapping and the separate saved widget captures.
 
 | Browsing | Search | Details |
 | --- | --- | --- |

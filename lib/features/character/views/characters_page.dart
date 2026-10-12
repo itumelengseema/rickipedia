@@ -130,19 +130,17 @@ class _CharactersPageState extends ConsumerState<CharactersPage> {
                             Row(
                               children: [
                                 IconButton(
-                                  onPressed: () {},
+                                  onPressed: null,
                                   icon: const Icon(
                                     Icons.person,
                                     size: AppSpacing.xl,
-                                    color: AppColors.black,
                                   ),
                                 ),
                                 IconButton(
-                                  onPressed: () {},
+                                  onPressed: null,
                                   icon: const Icon(
                                     Icons.more_vert_rounded,
                                     size: AppSpacing.xl,
-                                    color: AppColors.black,
                                   ),
                                 ),
                               ],

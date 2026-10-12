@@ -12,6 +12,7 @@ import 'package:rickipedia/features/character/models/origin_model.dart';
 import 'package:rickipedia/features/character/providers/character_providers.dart';
 import 'package:rickipedia/features/character/repositories/character_repository.dart';
 import 'package:rickipedia/features/character/views/characters_page.dart';
+import 'package:rickipedia/features/character/views/character_details_page.dart';
 
 const testCharacterImageUrl = 'https://example.test/character.png';
 const pageLoadingIndicatorKey = Key('characters-page-loading-indicator');
@@ -90,6 +91,49 @@ Future<void> pumpPage(
 
 void main() {
   group('CharactersPage', () {
+    testWidgets(
+      'tapping a character opens its details and returns to the grid',
+      (tester) async {
+        final selected = character(id: 2, name: 'Morty Smith')
+          ..origin = Origin(name: 'Earth (C-137)', url: '')
+          ..type = 'Selected grid character';
+        final repository = FakeCharacterRepository([
+          () async =>
+              responseWith([character(id: 1, name: 'Rick Sanchez'), selected]),
+        ]);
+        await pumpPage(tester, repository);
+        await tester.pumpAndSettle();
+        final originalState = tester.state(find.byType(CharactersPage));
+
+        await tester.ensureVisible(find.text('Morty Smith'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Morty Smith'));
+        await tester.pumpAndSettle();
+
+        expect(
+          tester
+              .widget<CharacterDetailsPage>(find.byType(CharacterDetailsPage))
+              .character,
+          same(selected),
+        );
+        expect(find.text('Character details'), findsOneWidget);
+        expect(find.text('Morty Smith'), findsOneWidget);
+        expect(find.text('Rick Sanchez'), findsNothing);
+        expect(find.text('Earth (C-137)'), findsOneWidget);
+        expect(find.text('Selected grid character'), findsOneWidget);
+
+        await tester.tap(find.byType(BackButton));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(CharacterDetailsPage), findsNothing);
+        expect(tester.state(find.byType(CharactersPage)), same(originalState));
+        expect(find.text('Rick Sanchez').hitTestable(), findsOneWidget);
+        expect(find.text('Morty Smith').hitTestable(), findsOneWidget);
+        expect(repository.requestedPages, [1]);
+        expect(tester.takeException(), isNull);
+      },
+    );
+
     testWidgets('shows a loading indicator while characters are requested', (
       tester,
     ) async {

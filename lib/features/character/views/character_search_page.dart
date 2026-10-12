@@ -1,8 +1,10 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:rickipedia/features/character/models/character_model.dart';
 import 'package:rickipedia/features/character/providers/character_search_controller.dart';
+import 'package:rickipedia/features/character/views/character_details_page.dart';
 import 'package:rickipedia/shared/widgets/search_results_list.dart';
 import 'package:rickipedia/theme/app_colours.dart';
 import 'package:rickipedia/theme/app_spacing.dart';
@@ -178,20 +180,40 @@ class _CharacterSearchPageState extends ConsumerState<CharacterSearchPage> {
               return SearchResultsList<Character>(
                 items: response.characters,
                 itemBuilder: (context, character) {
-                  return ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: ClipRRect(
-                      borderRadius: BorderRadius.circular(6),
-                      child: Image.network(
-                        character.image,
-                        width: 64,
-                        height: 64,
-                        fit: BoxFit.cover,
+                  return GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) {
+                            return CharacterDetailsPage(character: character);
+                          },
+                        ),
+                      );
+                    },
+                    child: ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: ClipRRect(
+                        borderRadius: BorderRadius.circular(6),
+                        child: CachedNetworkImage(
+                          imageUrl: character.image,
+                          width: 64,
+                          height: 64,
+                          fit: BoxFit.cover,
+                          errorWidget: (context, url, error) {
+                            return const Center(
+                              child: Icon(
+                                Icons.broken_image_outlined,
+                                size: AppSpacing.xl,
+                                color: AppColors.textSecondary,
+                              ),
+                            );
+                          },
+                        ),
                       ),
-                    ),
-                    title: Text(character.name),
-                    subtitle: Text(
-                      '${character.species} • ${character.status}',
+                      title: Text(character.name),
+                      subtitle: Text(
+                        '${character.species} • ${character.status}',
+                      ),
                     ),
                   );
                 },

@@ -179,4 +179,124 @@ void main() {
     expect(container.read(paginationStateProvider).isLoading, isFalse);
     expect(container.read(paginationStateProvider).error, isNull);
   });
+
+  test('preserves loaded characters while refresh is pending', () async {
+    final initial = responseFixture('characters_page_1.json');
+    final refresh = Completer<CharacterResponse>();
+    var pageOneRequests = 0;
+    final repository = FakeCharacterRepository((page, _) {
+      pageOneRequests++;
+      return pageOneRequests == 1 ? Future.value(initial) : refresh.future;
+    });
+    final container = containerFor(repository);
+    await container.read(characterControllerProvider.future);
+
+    final refreshRequest = container
+        .read(characterControllerProvider.notifier)
+        .refresh();
+
+    final pendingState = container.read(characterControllerProvider);
+    expect(pendingState.isLoading, isTrue);
+    expect(pendingState.requireValue, same(initial));
+
+    refresh.complete(responseFixture('characters_page_2.json'));
+    await refreshRequest;
+  });
+
+  test('preserves loaded characters when refresh fails', () async {
+    final initial = responseFixture('characters_page_1.json');
+    final error = Exception('refresh failed');
+    var pageOneRequests = 0;
+    final repository = FakeCharacterRepository((page, _) async {
+      pageOneRequests++;
+      if (pageOneRequests == 1) return initial;
+      throw error;
+    });
+    final container = containerFor(repository);
+    await container.read(characterControllerProvider.future);
+
+    await container.read(characterControllerProvider.notifier).refresh();
+
+    final failedState = container.read(characterControllerProvider);
+    expect(failedState.hasError, isTrue);
+    expect(failedState.error, same(error));
+    expect(failedState.requireValue, same(initial));
+  });
+
+  test('replaces loaded characters when refresh succeeds', () async {
+    final initial = responseFixture('characters_page_1.json');
+    final refreshed = responseFixture('characters_page_2.json');
+    var pageOneRequests = 0;
+    final repository = FakeCharacterRepository((page, _) async {
+      pageOneRequests++;
+      return pageOneRequests == 1 ? initial : refreshed;
+    });
+    final container = containerFor(repository);
+    await container.read(characterControllerProvider.future);
+
+    await container.read(characterControllerProvider.notifier).refresh();
+
+    expect(
+      container.read(characterControllerProvider).requireValue,
+      same(refreshed),
+    );
+  });
+
+  test('does not paginate while refresh is pending', () async {
+    final initial = responseFixture('characters_page_1.json');
+    final refresh = Completer<CharacterResponse>();
+    var pageOneRequests = 0;
+    final repository = FakeCharacterRepository((page, _) {
+      pageOneRequests++;
+      return pageOneRequests == 1 ? Future.value(initial) : refresh.future;
+    });
+    final container = containerFor(repository);
+    await container.read(characterControllerProvider.future);
+    final controller = container.read(characterControllerProvider.notifier);
+
+    final refreshRequest = controller.refresh();
+    await controller.loadNextPage();
+
+    expect(repository.requests.map((request) => request.page), [1, 1]);
+
+    refresh.complete(responseFixture('characters_page_2.json'));
+    await refreshRequest;
+  });
+
+  test('appends only unique character IDs in order', () async {
+    final first = characterResponse(
+      characters: [
+        characterFixture(id: 1, name: 'Rick Sanchez'),
+        characterFixture(id: 2, name: 'Morty Smith'),
+      ],
+      pages: 2,
+      next: 'https://rickandmortyapi.com/api/character?page=2',
+    );
+    final second = characterResponse(
+      characters: [
+        characterFixture(id: 2, name: 'Morty Smith'),
+        characterFixture(id: 3, name: 'Summer Smith'),
+        characterFixture(id: 3, name: 'Summer Smith'),
+        characterFixture(id: 4, name: 'Beth Smith'),
+      ],
+      pages: 2,
+      prev: 'https://rickandmortyapi.com/api/character?page=1',
+    );
+    final repository = FakeCharacterRepository(
+      (page, _) async => page == 1 ? first : second,
+    );
+    final container = containerFor(repository);
+
+    await container.read(characterControllerProvider.future);
+    await container.read(characterControllerProvider.notifier).loadNextPage();
+
+    expect(
+      container
+          .read(characterControllerProvider)
+          .requireValue
+          .characters
+          .map((character) => character.id),
+      [1, 2, 3, 4],
+    );
+  });
 }

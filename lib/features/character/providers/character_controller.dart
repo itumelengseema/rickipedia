@@ -72,13 +72,21 @@ class CharacterController extends AsyncNotifier<CharacterResponse> {
 
       if (!ref.mounted || requestVersion != _requestVersion) return;
 
+      final seenIds = current.characters
+          .map((character) => character.id)
+          .toSet();
+
+      final uniqueIncoming = nextPage.characters
+          .where((character) => seenIds.add(character.id))
+          .toList();
+
       state = AsyncData(
         CharacterResponse(
           count: nextPage.count,
           pages: nextPage.pages,
           next: nextPage.next,
           prev: nextPage.prev,
-          characters: [...current.characters, ...nextPage.characters],
+          characters: [...current.characters, ...uniqueIncoming],
         ),
       );
 

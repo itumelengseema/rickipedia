@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:ui' as ui;
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -10,6 +12,12 @@ import 'package:rickipedia/features/character/models/origin_model.dart';
 import 'package:rickipedia/features/character/providers/character_providers.dart';
 import 'package:rickipedia/features/character/repositories/character_repository.dart';
 import 'package:rickipedia/features/character/views/characters_page.dart';
+
+const testCharacterImageUrl = 'https://example.test/character.png';
+const pageLoadingIndicatorKey = Key('characters-page-loading-indicator');
+const paginationLoadingIndicatorKey = Key(
+  'characters-pagination-loading-indicator',
+);
 
 class FakeCharacterRepository implements CharacterRepository {
   FakeCharacterRepository(this._responses);
@@ -48,16 +56,29 @@ Character character({required int id, required String name}) => Character(
   gender: 'Male',
   origin: Origin(name: 'Earth', url: ''),
   location: Location(name: 'Earth', url: ''),
-  image: '',
+  image: testCharacterImageUrl,
   episode: const [],
   url: '',
   created: '2017-11-04T18:48:46.250Z',
 );
 
+Future<void> cacheCharacterImage() async {
+  final recorder = ui.PictureRecorder();
+  final canvas = Canvas(recorder);
+  canvas.drawColor(Colors.transparent, BlendMode.src);
+  final image = await recorder.endRecording().toImage(1, 1);
+  const provider = CachedNetworkImageProvider(testCharacterImageUrl);
+  PaintingBinding.instance.imageCache.putIfAbsent(
+    provider,
+    () => OneFrameImageStreamCompleter(Future.value(ImageInfo(image: image))),
+  );
+}
+
 Future<void> pumpPage(
   WidgetTester tester,
   CharacterRepository repository,
 ) async {
+  await cacheCharacterImage();
   await tester.pumpWidget(
     ProviderScope(
       retry: (_, _) => null,
@@ -77,7 +98,7 @@ void main() {
 
       await pumpPage(tester, repository);
 
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.byKey(pageLoadingIndicatorKey), findsOneWidget);
       expect(repository.fetchCalls, 1);
     });
 
@@ -111,7 +132,7 @@ void main() {
       await tester.pump();
 
       expect(find.text('No characters found'), findsOneWidget);
-      expect(find.byType(CircularProgressIndicator), findsNothing);
+      expect(find.byKey(pageLoadingIndicatorKey), findsNothing);
     });
 
     testWidgets('pull to refresh works when content is too short to scroll', (
@@ -163,7 +184,7 @@ void main() {
       await tester.pump();
 
       expect(repository.fetchCalls, 2);
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.byKey(pageLoadingIndicatorKey), findsOneWidget);
       expect(find.text('Failed to load characters'), findsNothing);
 
       retryRequest.complete(
@@ -172,7 +193,7 @@ void main() {
       await tester.pump();
 
       expect(find.text('Summer Smith'), findsOneWidget);
-      expect(find.byType(CircularProgressIndicator), findsNothing);
+      expect(find.byKey(pageLoadingIndicatorKey), findsNothing);
     });
 
     testWidgets('scrolling near the end loads and appends the next page', (
@@ -219,7 +240,7 @@ void main() {
 
       expect(find.text('Last Character'), findsOneWidget);
       expect(repository.requestedPages, [1, 2]);
-      expect(find.byType(CircularProgressIndicator), findsNothing);
+      expect(find.byKey(paginationLoadingIndicatorKey), findsNothing);
     });
 
     testWidgets('pagination failure shows a snackbar whose Retry loads again', (

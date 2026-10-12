@@ -172,7 +172,11 @@ class _CharactersPageState extends ConsumerState<CharactersPage> {
             characterState.when(
               loading: () => const SliverFillRemaining(
                 hasScrollBody: false,
-                child: Center(child: CircularProgressIndicator()),
+                child: Center(
+                  child: CircularProgressIndicator(
+                    key: Key('characters-page-loading-indicator'),
+                  ),
+                ),
               ),
 
               error: (error, stackTrace) => SliverFillRemaining(
@@ -232,7 +236,13 @@ class _CharactersPageState extends ConsumerState<CharactersPage> {
                       const SliverToBoxAdapter(
                         child: Padding(
                           padding: EdgeInsets.all(AppSpacing.md),
-                          child: Center(child: CircularProgressIndicator()),
+                          child: Center(
+                            child: CircularProgressIndicator(
+                              key: Key(
+                                'characters-pagination-loading-indicator',
+                              ),
+                            ),
+                          ),
                         ),
                       ),
                   ],

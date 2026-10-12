@@ -10,6 +10,7 @@ import 'package:rickipedia/features/character/models/character_response_model.da
 import 'package:rickipedia/features/character/models/location_model.dart';
 import 'package:rickipedia/features/character/models/origin_model.dart';
 import 'package:rickipedia/features/character/providers/character_providers.dart';
+import 'package:rickipedia/features/character/providers/character_controller.dart';
 import 'package:rickipedia/features/character/repositories/character_repository.dart';
 import 'package:rickipedia/features/character/views/characters_page.dart';
 import 'package:rickipedia/features/character/views/character_details_page.dart';
@@ -91,6 +92,88 @@ Future<void> pumpPage(
 
 void main() {
   group('CharactersPage', () {
+    testWidgets('profile and menu placeholders are visibly disabled', (
+      tester,
+    ) async {
+      final repository = FakeCharacterRepository([
+        () async => responseWith([]),
+      ]);
+      await pumpPage(tester, repository);
+      await tester.pumpAndSettle();
+
+      for (final icon in [Icons.person, Icons.more_vert_rounded]) {
+        final iconFinder = find.byIcon(icon);
+        final button = tester.widget<IconButton>(
+          find.ancestor(of: iconFinder, matching: find.byType(IconButton)),
+        );
+        expect(button.onPressed, isNull);
+        expect(tester.widget<Icon>(iconFinder).color, isNull);
+        expect(IconTheme.of(tester.element(iconFinder)).color!.a, lessThan(1));
+      }
+    });
+
+    for (final fails in [false, true]) {
+      testWidgets(
+        'refresh shows loading with retained data, then ${fails ? 'shows error UI with retained controller data' : 'replaces cards on success'}',
+        (tester) async {
+          final initial = responseWith([
+            character(id: 1, name: 'Rick Sanchez'),
+          ]);
+          final request = Completer<CharacterResponse>();
+          final repository = FakeCharacterRepository([
+            () async => initial,
+            () => request.future,
+          ]);
+          await pumpPage(tester, repository);
+          await tester.pumpAndSettle();
+          final container = ProviderScope.containerOf(
+            tester.element(find.byType(CharactersPage)),
+          );
+
+          final refresh = tester
+              .widget<RefreshIndicator>(find.byType(RefreshIndicator))
+              .onRefresh();
+          await tester.pump();
+
+          expect(container.read(characterControllerProvider).isLoading, isTrue);
+          expect(
+            container.read(characterControllerProvider).requireValue,
+            same(initial),
+          );
+          expect(find.text('Rick Sanchez'), findsNothing);
+          expect(find.byKey(pageLoadingIndicatorKey), findsOneWidget);
+
+          if (fails) {
+            request.completeError(Exception('refresh failed'));
+          } else {
+            request.complete(
+              responseWith([character(id: 2, name: 'Morty Smith')]),
+            );
+          }
+          await refresh;
+          await tester.pumpAndSettle();
+
+          expect(repository.requestedPages, [1, 1]);
+          expect(find.text('Rick Sanchez'), findsNothing);
+          if (fails) {
+            final state = container.read(characterControllerProvider);
+            expect(state.hasError, isTrue);
+            expect(state.requireValue, same(initial));
+            expect(find.text('Failed to load characters'), findsOneWidget);
+            expect(
+              find.widgetWithText(ElevatedButton, 'Retry'),
+              findsOneWidget,
+            );
+            expect(find.byType(SnackBar), findsNothing);
+          } else {
+            expect(find.text('Morty Smith'), findsOneWidget);
+            expect(find.text('Failed to load characters'), findsNothing);
+          }
+          expect(tester.takeException(), isNull);
+        },
+      );
+    }
+
     testWidgets(
       'tapping a character opens its details and returns to the grid',
       (tester) async {

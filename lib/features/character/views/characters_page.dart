@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rickipedia/features/character/providers/character_controller.dart';
 import 'package:rickipedia/features/character/providers/pagination_provider.dart';
+import 'package:rickipedia/features/character/views/character_details_page.dart';
 import 'package:rickipedia/features/character/views/character_search_page.dart';
 import 'package:rickipedia/shared/widgets/character_card.dart';
 import 'package:rickipedia/shared/widgets/primary_button.dart';
@@ -107,7 +108,7 @@ class _CharactersPageState extends ConsumerState<CharactersPage> {
               floating: true,
               snap: true,
               pinned: false,
-              expandedHeight: 160,
+              expandedHeight: 130,
               flexibleSpace: FlexibleSpaceBar(
                 background: SafeArea(
                   child: Padding(
@@ -219,7 +220,20 @@ class _CharactersPageState extends ConsumerState<CharactersPage> {
                         delegate: SliverChildBuilderDelegate((context, index) {
                           final character = response.characters[index];
 
-                          return CharacterCard(character: character);
+                          return GestureDetector(
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) {
+                                    return CharacterDetailsPage(
+                                      character: character,
+                                    );
+                                  },
+                                ),
+                              );
+                            },
+                            child: CharacterCard(character: character),
+                          );
                         }, childCount: response.characters.length),
                         gridDelegate:
                             const SliverGridDelegateWithFixedCrossAxisCount(

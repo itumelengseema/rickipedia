@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:ui' as ui;
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -11,6 +12,7 @@ import 'package:rickipedia/features/character/models/origin_model.dart';
 import 'package:rickipedia/features/character/providers/character_providers.dart';
 import 'package:rickipedia/features/character/repositories/character_repository.dart';
 import 'package:rickipedia/features/character/views/character_search_page.dart';
+import 'package:rickipedia/features/character/views/character_details_page.dart';
 
 class FakeCharacterRepository implements CharacterRepository {
   FakeCharacterRepository({required this.onFetch});
@@ -53,7 +55,9 @@ Future<void> cacheCharacterImage() async {
   final canvas = Canvas(recorder);
   canvas.drawColor(Colors.transparent, BlendMode.src);
   final image = await recorder.endRecording().toImage(1, 1);
-  final provider = NetworkImage('https://example.test/character.png');
+  const provider = CachedNetworkImageProvider(
+    'https://example.test/character.png',
+  );
   PaintingBinding.instance.imageCache.putIfAbsent(
     provider,
     () => OneFrameImageStreamCompleter(Future.value(ImageInfo(image: image))),
@@ -75,6 +79,57 @@ Future<void> pumpSearchPage(
 
 void main() {
   group('CharacterSearchPage', () {
+    testWidgets(
+      'tapping a result opens its details and preserves the search on return',
+      (tester) async {
+        await cacheCharacterImage();
+        final selected = character(id: 2, name: 'Pickle Rick')
+          ..species = 'Pickle'
+          ..type = 'Selected search character';
+        final repository = FakeCharacterRepository(
+          onFetch: (_) async =>
+              responseWith([character(id: 1, name: 'Rick Sanchez'), selected]),
+        );
+        await pumpSearchPage(tester, repository);
+        await tester.enterText(find.byType(TextField), 'Rick');
+        await tester.pump(const Duration(milliseconds: 500));
+        await tester.pumpAndSettle();
+        final originalState = tester.state(find.byType(CharacterSearchPage));
+
+        await tester.tap(find.text('Pickle Rick'));
+        await tester.pumpAndSettle();
+
+        expect(
+          tester
+              .widget<CharacterDetailsPage>(find.byType(CharacterDetailsPage))
+              .character,
+          same(selected),
+        );
+        expect(find.text('Character details'), findsOneWidget);
+        expect(find.text('Pickle Rick'), findsOneWidget);
+        expect(find.text('Rick Sanchez'), findsNothing);
+        expect(find.text('Pickle'), findsNWidgets(2));
+        expect(find.text('Selected search character'), findsOneWidget);
+
+        await tester.tap(find.byType(BackButton));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(CharacterDetailsPage), findsNothing);
+        expect(
+          tester.state(find.byType(CharacterSearchPage)),
+          same(originalState),
+        );
+        expect(
+          tester.widget<TextField>(find.byType(TextField)).controller!.text,
+          'Rick',
+        );
+        expect(find.text('Rick Sanchez').hitTestable(), findsOneWidget);
+        expect(find.text('Pickle Rick').hitTestable(), findsOneWidget);
+        expect(repository.searchedNames, ['Rick']);
+        expect(tester.takeException(), isNull);
+      },
+    );
+
     testWidgets('displays the initial search instruction', (tester) async {
       final repository = FakeCharacterRepository(
         onFetch: (_) async => responseWith([]),
@@ -142,6 +197,10 @@ void main() {
       expect(repository.searchedNames, ['Rick']);
       expect(find.text('Rick Sanchez'), findsOneWidget);
       expect(find.text('Human • Alive'), findsOneWidget);
+      final portrait = tester.widget<CachedNetworkImage>(
+        find.byType(CachedNetworkImage),
+      );
+      expect(portrait.imageUrl, 'https://example.test/character.png');
     });
 
     testWidgets('empty successful response displays no-results state', (

@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:rickipedia/features/character/models/character_model.dart';
 import 'package:rickipedia/theme/app_colours.dart';
@@ -35,17 +36,13 @@ class CharacterCard extends StatelessWidget {
           Expanded(
             child: SizedBox(
               width: double.infinity,
-              child: Image.network(
-                character.image,
+              child: CachedNetworkImage(
+                imageUrl: character.image,
                 fit: BoxFit.cover,
-                loadingBuilder: (context, child, loadingProgress) {
-                  if (loadingProgress == null) {
-                    return child;
-                  }
-
+                placeholder: (context, url) {
                   return const Center(child: CircularProgressIndicator());
                 },
-                errorBuilder: (context, error, stackTrace) {
+                errorWidget: (context, url, error) {
                   return const Center(
                     child: Icon(
                       Icons.broken_image_outlined,

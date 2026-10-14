@@ -117,3 +117,24 @@ An active GitHub branch ruleset targets `develop`, `staging` and `main`.
 
 Ruleset availability and enforcement depend on repository visibility
 and the GitHub account plan. Recheck these if either changes.
+
+## Issue completion
+
+Keep `main` as the repository’s default branch.
+
+Normal working PRs target `develop` and use `Refs #<issue-number>`
+to link their issue.
+
+Close an implementation issue manually when:
+- All its acceptance criteria are met.
+- Required CI passes.
+- Its PR is merged into `develop`.
+
+Before closing, add a comment linking the merged PR and recording
+validation results and any known limitations.
+
+Merging into `develop` means the work is integrated, not released.
+
+Issues with release-specific acceptance criteria remain open until
+those criteria are met, including platform validation or publishing
+where required.

@@ -26,5 +26,30 @@ jobs:
           channel: stable
           cache: true
       - run: flutter pub get
+      - name: Check Dart formatting
+        run: dart format --output=none --set-exit-if-changed lib test
       - run: flutter analyze
-      - run: flutter test
+      - name: Run tests with coverage
+        run: flutter test --coverage
+
+      - name: Summarize line coverage
+        shell: bash
+        run: |
+          awk -F: '
+            /^LF:/ { total += $2 }
+            /^LH:/ { hit += $2 }
+            END {
+              if (total == 0) {
+                print "No executable lines found in coverage report."
+                exit 1
+              }
+              printf "Line coverage: %.2f%% (%d/%d lines)\n", hit / total * 100, hit, total
+            }
+          ' coverage/lcov.info | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: flutter-coverage
+          path: coverage/lcov.info
+          if-no-files-found: error

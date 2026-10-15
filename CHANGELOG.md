@@ -4,6 +4,7 @@ Notable changes to Rickipedia are recorded here.
 
 ## [Unreleased]
 ## [1.0.0] - 2026-10-14
+
 ### Added
 - Browse characters with pagination.
 - Search characters by name.

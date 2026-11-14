@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:rickipedia/features/on_boarding/views/onboarding_gate.dart';
 import 'package:rickipedia/theme/app_theme.dart';
 
-
-
 class RickipediaApp extends StatefulWidget {
   const RickipediaApp({super.key});
 

@@ -1,10 +1,8 @@
-﻿class OnboardingItem {
-  final String imageUrl,title,description;
+class OnboardingItem {
+  final String imageUrl, title, description;
   OnboardingItem({
     required this.imageUrl,
-    required  this.description,
-    required this.title
-});
+    required this.description,
+    required this.title,
+  });
 }
-
-

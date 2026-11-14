@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rickipedia/features/character/views/characters_page.dart';
 import 'package:rickipedia/features/on_boarding/providers/onboarding_provider.dart';
@@ -47,8 +47,9 @@ class _OnboardingGateState extends ConsumerState<OnboardingGate> {
     final onboarding = ref.watch(onboardingProvider);
     return onboarding.when(
       data: (isCompleted) {
-        if(isCompleted){
-          return CharactersPage();}
+        if (isCompleted) {
+          return CharactersPage();
+        }
         return OnboardingPage(onCompleted: _completeOnboarding);
       },
       error: (error, stackTrace) {

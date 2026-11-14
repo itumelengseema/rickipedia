@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:rickipedia/features/on_boarding/models/onboarding_items.dart';
 import 'package:rickipedia/theme/app_spacing.dart';
 import 'package:rickipedia/theme/app_text_style.dart';
@@ -29,7 +29,11 @@ class OnboardingSlide extends StatelessWidget {
             style: AppTextStyles.headingLarge,
           ),
           SizedBox(height: AppSpacing.sm),
-          Text(item.description,textAlign: TextAlign.center,style: AppTextStyles.body,)
+          Text(
+            item.description,
+            textAlign: TextAlign.center,
+            style: AppTextStyles.body,
+          ),
         ],
       ),
     );

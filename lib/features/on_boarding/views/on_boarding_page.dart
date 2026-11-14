@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:rickipedia/features/on_boarding/data/onboarding_items.dart';
 import 'package:rickipedia/shared/widgets/onboarding_slide.dart';
 import 'package:rickipedia/shared/widgets/primary_button.dart';
@@ -9,10 +9,7 @@ import 'package:rickipedia/theme/app_text_style.dart';
 class OnboardingPage extends StatefulWidget {
   final VoidCallback onCompleted;
 
-  const OnboardingPage({
-    super.key,
-    required this.onCompleted,
-  });
+  const OnboardingPage({super.key, required this.onCompleted});
 
   @override
   State<OnboardingPage> createState() => _OnboardingPageState();
@@ -22,8 +19,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
   late final PageController _pageController;
   int _currentPage = 0;
 
-  bool get _isLastPage =>
-      _currentPage == onboardingItems.length - 1;
+  bool get _isLastPage => _currentPage == onboardingItems.length - 1;
 
   @override
   void initState() {
@@ -62,9 +58,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                   });
                 },
                 itemBuilder: (context, index) {
-                  return OnboardingSlide(
-                    item: onboardingItems[index],
-                  );
+                  return OnboardingSlide(item: onboardingItems[index]);
                 },
               ),
             ),
@@ -75,12 +69,12 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 children: [
                   Semantics(
                     label:
-                    'Page ${_currentPage + 1} of ${onboardingItems.length}',
+                        'Page ${_currentPage + 1} of ${onboardingItems.length}',
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: List.generate(
                         onboardingItems.length,
-                            (index) => AnimatedContainer(
+                        (index) => AnimatedContainer(
                           duration: const Duration(milliseconds: 200),
                           margin: const EdgeInsets.symmetric(
                             horizontal: AppSpacing.xs,
@@ -102,15 +96,16 @@ class _OnboardingPageState extends State<OnboardingPage> {
                     width: double.infinity,
                     child: PrimaryButton(
                       label: _isLastPage ? 'Get started' : 'Next',
-                      onPressed: _isLastPage
-                          ? widget.onCompleted
-                          : _nextPage,
+                      onPressed: _isLastPage ? widget.onCompleted : _nextPage,
                     ),
                   ),
                   if (!_isLastPage)
                     TextButton(
                       onPressed: widget.onCompleted,
-                      child: const Text('Skip',style: AppTextStyles.productTitle,),
+                      child: const Text(
+                        'Skip',
+                        style: AppTextStyles.productTitle,
+                      ),
                     ),
                 ],
               ),

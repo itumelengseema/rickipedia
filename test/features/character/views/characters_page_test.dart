@@ -16,7 +16,6 @@ import 'package:rickipedia/features/character/repositories/character_repository.
 import 'package:rickipedia/features/character/views/characters_page.dart';
 import 'package:rickipedia/features/character/views/character_details_page.dart';
 
-
 const testCharacterImageUrl = 'https://example.test/character.png';
 const pageLoadingIndicatorKey = Key('characters-page-loading-indicator');
 const paginationLoadingIndicatorKey = Key(

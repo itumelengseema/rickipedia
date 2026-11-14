@@ -77,7 +77,6 @@ void main() {
   test(
     'real provider and repository wiring survives container recreation',
     () async {
-
       final firstContainer = ProviderContainer();
       try {
         expect(await firstContainer.read(onboardingProvider.future), isFalse);

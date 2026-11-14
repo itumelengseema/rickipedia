@@ -135,7 +135,6 @@ void main() {
     pendingSave.complete();
     await tester.pumpAndSettle();
     expect(find.byType(CharactersPage), findsOneWidget);
-
   });
 
   testWidgets('removing the gate during save causes no widget exception', (

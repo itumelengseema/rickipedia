@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rickipedia/features/character/views/characters_page.dart';
 import 'package:rickipedia/features/on_boarding/providers/onboarding_provider.dart';
@@ -52,16 +52,12 @@ class _OnboardingGateState extends ConsumerState<OnboardingGate> {
         }
         return Stack(
           children: [
-            OnboardingPage(
-              onCompleted: _completeOnboarding,
-            ),
+            OnboardingPage(onCompleted: _completeOnboarding),
             if (_isSaving)
               Positioned.fill(
                 child: ColoredBox(
                   color: Colors.black26,
-                  child: Center(
-                    child: CircularProgressIndicator(),
-                  ),
+                  child: Center(child: CircularProgressIndicator()),
                 ),
               ),
           ],

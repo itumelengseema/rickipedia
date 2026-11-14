@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rickipedia/features/character/models/character_model.dart';
@@ -14,6 +15,7 @@ import 'package:rickipedia/features/character/providers/character_controller.dar
 import 'package:rickipedia/features/character/repositories/character_repository.dart';
 import 'package:rickipedia/features/character/views/characters_page.dart';
 import 'package:rickipedia/features/character/views/character_details_page.dart';
+
 
 const testCharacterImageUrl = 'https://example.test/character.png';
 const pageLoadingIndicatorKey = Key('characters-page-loading-indicator');

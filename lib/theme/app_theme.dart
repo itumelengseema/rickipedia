@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:rickipedia/theme/app_spacing.dart';
 import 'package:rickipedia/theme/app_text_style.dart';

@@ -62,13 +62,8 @@ class _OnboardingPageState extends State<OnboardingPage> {
                   });
                 },
                 itemBuilder: (context, index) {
-                  return Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      OnboardingSlide(
-                        item: onboardingItems[index],
-                      ),
-                    ],
+                  return OnboardingSlide(
+                    item: onboardingItems[index],
                   );
                 },
               ),

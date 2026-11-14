@@ -21,9 +21,8 @@ final onboardingProvider = AsyncNotifierProvider<OnboardingController, bool>(
 class OnboardingController extends AsyncNotifier<bool> {
   @override
   Future<bool> build() {
-    final dataSource = ref.watch(onboardingLocalDataSourceProvider);
-
-    return dataSource.isCompleted();
+    final repository = ref.watch(onboardingRepositoryProvider);
+    return repository.isCompleted();
   }
 
   Future<void> completeOnboarding() async {

@@ -130,10 +130,12 @@ void main() {
     expect(repository.saveCalls, 1);
     expect(find.byType(OnboardingPage), findsOneWidget);
     expect(find.byType(CharactersPage), findsNothing);
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
 
     pendingSave.complete();
     await tester.pumpAndSettle();
     expect(find.byType(CharactersPage), findsOneWidget);
+
   });
 
   testWidgets('removing the gate during save causes no widget exception', (

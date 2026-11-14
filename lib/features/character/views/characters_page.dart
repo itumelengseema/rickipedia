@@ -123,9 +123,13 @@ class _CharactersPageState extends ConsumerState<CharactersPage> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              "Rickipedia",
-                              style: AppTextStyles.headingLarge,
+                            Expanded(
+                              child: Text(
+                                "Rickipedia",
+                                style: AppTextStyles.headingLarge,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
                             Row(
                               children: [

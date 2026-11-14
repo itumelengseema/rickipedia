@@ -1,7 +1,7 @@
 import 'package:animated_splash_screen/animated_splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:rickipedia/features/character/views/characters_page.dart';
+import 'package:rickipedia/features/on_boarding/views/onboarding_gate.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -18,7 +18,7 @@ class _SplashPageState extends State<SplashPage> {
         child: AnimatedSplashScreen(
           splashIconSize: 220,
           splash: SvgPicture.asset("assets/images/app_icon.svg"),
-          nextScreen: CharactersPage(),
+          nextScreen: OnboardingGate(),
         ),
       ),
     );

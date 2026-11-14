@@ -26,9 +26,9 @@ class OnboardingController extends AsyncNotifier<bool> {
   }
 
   Future<void> completeOnboarding() async {
-    final dataSource = ref.read(onboardingLocalDataSourceProvider);
+    final repository = ref.read(onboardingRepositoryProvider);
 
-    await dataSource.complete();
+    await repository.complete();
 
     if (!ref.mounted) return;
 
